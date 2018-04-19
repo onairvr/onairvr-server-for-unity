@@ -1,4 +1,4 @@
-# onAirVR Server for Unity ![current release](https://img.shields.io/github/release/onairvr/onairvr-server-for-unity.svg)
+# onAirVR Server for Unity ![current release](https://img.shields.io/github/release/onairvr/onairvr-server-for-unity.svg) ![os](https://img.shields.io/badge/os-Windows-blue.svg) ![graphics](https://img.shields.io/badge/graphics-NVIDIA-green.svg)
 
 Make your PC VR game wirelessly playable!
 
@@ -8,7 +8,14 @@ onAirVR makes a mobile VR device act as a wireless VR HMD for a desktop by strea
 
 ## Before Getting Started
 
-onAirVR consists of two applications - mobile VR client app & contents app on PC. This plugin is for PC contents, and here are plugins for mobile VR platforms we supports :
+onAirVR consists of two applications - mobile VR client app & content app on PC. 
+
+Please ensure you have right hardwares :
+
+* **Google Daydream** or **Oculus Mobile** device
+* **Windows** desktop powered by **NVIDIA graphics**
+
+This plugin is for PC content development, and the plugins for mobile VR platforms we supports are belows :
 
 - [onAirVR Client for Oculus Mobile](https://github.com/onairvr/onairvr-client-for-oculus-mobile)
 - [onAirVR Client for Google VR](https://github.com/onairvr/onairvr-client-for-googlevr)
@@ -26,7 +33,12 @@ You may clone this whole project. It is worth noting that the project itself is 
 
 ## User Guide
 
-Visit our [Wiki](https://github.com/onairvr/onairvr-server-for-unity/wiki) to read the user guide.
+* [System Requirements](https://github.com/onairvr/onairvr-server-for-unity/wiki/System-Requirements)
+* [Quick Start](https://github.com/onairvr/onairvr-server-for-unity/wiki/Quick-Start)
+* [Programming Guide](https://github.com/onairvr/onairvr-server-for-unity/wiki/Programming-Guide)
+* [Build](https://github.com/onairvr/onairvr-server-for-unity/wiki/Build)
+* [Best Practices](https://github.com/onairvr/onairvr-server-for-unity/wiki/Best-Practices)
+* [API References](https://github.com/onairvr/onairvr-server-for-unity/wiki/API-References)
 
 
 

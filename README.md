@@ -52,5 +52,6 @@ It also contains our own [license file](https://github.com/onairvr/onairvr-serve
 ## Contact
 
 * Website : [https://onairvr.io](https://onairvr.io)
+* User Forum : [https://www.reddit.com/r/onairvr/](https://www.reddit.com/r/onairvr/)
 * Email : [contact@onairvr.io](mailto:contact@onairvr.io)
 * We are Clicked, Inc. : [http://clicked.co.kr](http://clicked.co.kr)

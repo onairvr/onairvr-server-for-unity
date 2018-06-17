@@ -14,6 +14,18 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 [Serializable]
+public class AirVRServerParamsReader {
+#pragma warning disable 414
+    [SerializeField] private AirVRServerParams onairvr;
+#pragma warning restore 414
+
+    public void ReadParams(string fileFrom, AirVRServerParams to) {
+        onairvr = to;
+        JsonUtility.FromJsonOverwrite(File.ReadAllText(fileFrom), this);
+    }
+}
+
+[Serializable]
 public class AirVRServerParams {
     public const float DefaultMaxFrameRate = 60.0f;
     public const float DefaultDefaultFrameRate = 30.0f;
@@ -128,13 +140,14 @@ public class AirVRServerParams {
         if (pairs.ContainsKey(keyConfigFile)) {
             if (File.Exists(pairs[keyConfigFile])) {
                 try {
-                    JsonUtility.FromJsonOverwrite(File.ReadAllText(pairs[keyConfigFile]), this);
+                    AirVRServerParamsReader reader = new AirVRServerParamsReader();
+                    reader.ReadParams(pairs[keyConfigFile], this);
                 }
                 catch (Exception e) {
                     Debug.LogWarning("[onAirVR] WARNING: failed to parse " + pairs[keyConfigFile] + " : " + e.ToString());
                 }
             }
-            pairs.Remove("onairvr_config");
+            pairs.Remove("config");
         }
 
         foreach (string key in pairs.Keys) {

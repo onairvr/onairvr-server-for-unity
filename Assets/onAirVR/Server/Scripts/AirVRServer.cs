@@ -24,39 +24,52 @@ public class AirVRServerParams {
     public const string DefaultLicense = "onairvr.license";
 
     public AirVRServerParams() {
-        MaxFrameRate = DefaultMaxFrameRate;
-        DefaultFrameRate = DefaultDefaultFrameRate;
-        ApplicationFrameRate = DefaultApplicationFrameRate;
-        VsyncCount = QualitySettings.vSyncCount;
-        VideoBitrate = DefaultVideoBitrate;
-        MaxClientCount = DefaultMaxClientCount;
-        StapPort = DefaultPort;
-        License = DefaultLicense;
+        maxFrameRate = DefaultMaxFrameRate;
+        defaultFrameRate = DefaultDefaultFrameRate;
+        applicationFrameRate = DefaultApplicationFrameRate;
+        vsyncCount = QualitySettings.vSyncCount;
+        videoBitrate = DefaultVideoBitrate;
+        maxClientCount = DefaultMaxClientCount;
+        stapPort = DefaultPort;
+        license = DefaultLicense;
     }
 
     public AirVRServerParams(AirVRServerInitParams initParams) {
-        MaxFrameRate = initParams.maxFrameRate;
-        DefaultFrameRate = initParams.defaultFrameRate;
-        ApplicationFrameRate = DefaultApplicationFrameRate;
-        VsyncCount = QualitySettings.vSyncCount;
-        VideoBitrate = initParams.videoBitrate;
-        MaxClientCount = initParams.maxClientCount;
-        StapPort = initParams.port;
-        License = initParams.licenseFilePath;
+        maxFrameRate = initParams.maxFrameRate;
+        defaultFrameRate = initParams.defaultFrameRate;
+        applicationFrameRate = DefaultApplicationFrameRate;
+        vsyncCount = QualitySettings.vSyncCount;
+        videoBitrate = initParams.videoBitrate;
+        maxClientCount = initParams.maxClientCount;
+        stapPort = initParams.port;
+        license = initParams.licenseFilePath;
     }
 
-    public float MaxFrameRate;
-    public float DefaultFrameRate;
-    public float ApplicationFrameRate;
-    public int VsyncCount;
-    public int VideoBitrate;
-    public int MaxClientCount;
-    public string License;
-    public int StapPort;
-    public int AmpPort;
-    public bool LoopbackOnly;
-    public string UserData;
-    public string GroupServer;
+    [SerializeField] private float maxFrameRate;
+    [SerializeField] private float defaultFrameRate;
+    [SerializeField] private float applicationFrameRate;
+    [SerializeField] private int vsyncCount;
+    [SerializeField] private int videoBitrate;
+    [SerializeField] private int maxClientCount;
+    [SerializeField] private string license;
+    [SerializeField] private int stapPort;
+    [SerializeField] private int ampPort;
+    [SerializeField] private bool loopbackOnly;
+    [SerializeField] private string userData;
+    [SerializeField] private string groupServer;
+
+    public float MaxFrameRate           { get { return maxFrameRate; } }
+    public float DefaultFrameRate       { get { return defaultFrameRate; } }
+    public float ApplicationFrameRate   { get { return applicationFrameRate; } }
+    public int VsyncCount               { get { return vsyncCount; } }
+    public int VideoBitrate             { get { return videoBitrate; } }
+    public int MaxClientCount           { get { return maxClientCount; } }
+    public string License               { get { return license; } }
+    public int StapPort                 { get { return stapPort; } }
+    public int AmpPort                  { get { return ampPort; } }
+    public bool LoopbackOnly            { get { return loopbackOnly; } }
+    public string UserData              { get { return userData; } }
+    public string GroupServer           { get { return groupServer; } }
 
     private int parseInt(string value, int defaultValue, Func<int, bool> predicate, Action<string> failed = null) {
         int result;
@@ -111,7 +124,7 @@ public class AirVRServerParams {
             return;
         }
 
-        string keyConfigFile = "onairvr_config";
+        string keyConfigFile = "config";
         if (pairs.ContainsKey(keyConfigFile)) {
             if (File.Exists(pairs[keyConfigFile])) {
                 try {
@@ -126,7 +139,7 @@ public class AirVRServerParams {
 
         foreach (string key in pairs.Keys) {
             if (key.Equals("onairvr_stap_port")) {
-                StapPort = parseInt(pairs[key], StapPort,
+                stapPort = parseInt(pairs[key], StapPort,
                     (parsed) => {
                         return 0 <= parsed && parsed <= 65535;
                     },
@@ -135,7 +148,7 @@ public class AirVRServerParams {
                     });
             }
             else if (key.Equals("onairvr_amp_port")) {
-                AmpPort = parseInt(pairs[key], AmpPort,
+                ampPort = parseInt(pairs[key], AmpPort,
                     (parsed) => {
                         return 0 <= parsed && parsed <= 65535;
                     },
@@ -144,31 +157,31 @@ public class AirVRServerParams {
                     });
             }
             else if (key.Equals("onairvr_loopback_only")) {
-                LoopbackOnly = pairs[key].Equals("true");
+                loopbackOnly = pairs[key].Equals("true");
             }
             else if (key.Equals("onairvr_license")) {
-                License = pairs[key];
+                license = pairs[key];
             }
             else if (key.Equals("onairvr_video_bitrate")) {
-                VideoBitrate = parseInt(pairs[key], VideoBitrate,
+                videoBitrate = parseInt(pairs[key], VideoBitrate,
                     (parsed) => {
                         return parsed > 0;
                     });
             }
             else if (key.Equals("onairvr_user_data")) {
-                UserData = WWW.UnEscapeURL(pairs[key]);
+                userData = WWW.UnEscapeURL(pairs[key]);
             }
             else if (key.Equals("onairvr_group_server")) {
-                GroupServer = pairs[key];
+                groupServer = pairs[key];
             }
             else if (key.Equals("onairvr_application_frame_rate")) {
-                ApplicationFrameRate = parseFloat(pairs[key], ApplicationFrameRate,
+                applicationFrameRate = parseFloat(pairs[key], ApplicationFrameRate,
                     (parsed) => {
                         return parsed >= 0.0f;
                     });
             }
             else if (key.Equals("onairvr_vsync_count")) {
-                VsyncCount = parseInt(pairs[key], VsyncCount,
+                vsyncCount = parseInt(pairs[key], VsyncCount,
                     (parsed) => {
                         return parsed >= 0;
                     });

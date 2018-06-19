@@ -67,8 +67,6 @@ public class AirVRServerParams {
     [SerializeField] private int stapPort;
     [SerializeField] private int ampPort;
     [SerializeField] private bool loopbackOnly;
-    [SerializeField] private string userData;
-    [SerializeField] private string groupServer;
 
     public float MaxFrameRate           { get { return maxFrameRate; } }
     public float DefaultFrameRate       { get { return defaultFrameRate; } }
@@ -80,8 +78,6 @@ public class AirVRServerParams {
     public int StapPort                 { get { return stapPort; } }
     public int AmpPort                  { get { return ampPort; } }
     public bool LoopbackOnly            { get { return loopbackOnly; } }
-    public string UserData              { get { return userData; } }
-    public string GroupServer           { get { return groupServer; } }
 
     private int parseInt(string value, int defaultValue, Func<int, bool> predicate, Action<string> failed = null) {
         int result;
@@ -180,12 +176,6 @@ public class AirVRServerParams {
                     (parsed) => {
                         return parsed > 0;
                     });
-            }
-            else if (key.Equals("onairvr_user_data")) {
-                userData = WWW.UnEscapeURL(pairs[key]);
-            }
-            else if (key.Equals("onairvr_group_server")) {
-                groupServer = pairs[key];
             }
             else if (key.Equals("onairvr_application_frame_rate")) {
                 applicationFrameRate = parseFloat(pairs[key], ApplicationFrameRate,

@@ -48,6 +48,9 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     private static extern void onairvr_SendCameraClipPlanes(int playerID, float nearClip, float farClip);
 
     [DllImport(AirVRServerPlugin.Name)]
+    private static extern void onairvr_SendUserData(int playerID, IntPtr data, int length);
+
+    [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_Disconnect(int playerID);
 
     private Vector3 _cameraPosition = Vector3.zero;
@@ -384,6 +387,20 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     public void RecenterPose() {
         if (isBoundToClient) {
             onairvr_RecenterPose(playerID);
+        }
+    }
+
+    public void SendUserData(byte[] data) {
+        if (isBoundToClient) {
+            IntPtr ptr = Marshal.AllocHGlobal(data.Length);
+
+            try {
+                Marshal.Copy(data, 0, ptr, data.Length);
+                onairvr_SendUserData(playerID, ptr, data.Length);
+            }
+            finally {
+                Marshal.FreeHGlobal(ptr);
+            }
         }
     }
 

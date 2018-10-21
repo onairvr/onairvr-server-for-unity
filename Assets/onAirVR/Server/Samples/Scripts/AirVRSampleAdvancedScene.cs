@@ -34,4 +34,5 @@ public class AirVRSampleAdvancedScene : MonoBehaviour, AirVRCameraRigManager.Eve
     public void AirVRCameraRigActivated(AirVRCameraRig cameraRig) {}
     public void AirVRCameraRigDeactivated(AirVRCameraRig cameraRig) {}
     public void AirVRCameraRigHasBeenUnbound(AirVRCameraRig cameraRig) {}
+    public void AirVRCameraRigUserDataReceived(AirVRCameraRig cameraRig, byte[] data) {}
 }

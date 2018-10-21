@@ -52,7 +52,11 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
         }
     }
 
-    public void AirVRCameraRigActivated(AirVRCameraRig cameraRig) {}
+    public void AirVRCameraRigActivated(AirVRCameraRig cameraRig) {
+        string pingMessage = "ping on camera rig activated, from " + System.Environment.MachineName;
+        cameraRig.SendUserData(System.Text.Encoding.UTF8.GetBytes(pingMessage));
+    }
+
     public void AirVRCameraRigDeactivated(AirVRCameraRig cameraRig) {}
 
     public void AirVRCameraRigHasBeenUnbound(AirVRCameraRig cameraRig) {
@@ -65,5 +69,9 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
         if (music != null) {
             music.Stop();
         }
+    }
+
+    public void AirVRCameraRigUserDataReceived(AirVRCameraRig cameraRig, byte[] userData) {
+        Debug.Log("User data received: " + System.Text.Encoding.UTF8.GetString(userData));
     }
 }

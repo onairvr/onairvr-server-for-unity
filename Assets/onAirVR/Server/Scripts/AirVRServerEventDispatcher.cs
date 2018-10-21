@@ -18,14 +18,8 @@ public class AirVRServerEventDispatcher : AirVREventDispatcher {
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_RemoveFirstMessage();
 
-    [DllImport(AirVRServerPlugin.Name)]
-    private static extern void RemoveFirstMessageFromQueue();
-
     protected override AirVRMessage ParseMessageImpl(IntPtr source, string message) {
-        AirVRServerMessage result = JsonUtility.FromJson<AirVRServerMessage>(message);
-        result.source = source;
-
-        return result;
+        return AirVRServerMessage.Parse(source, message);
     }
 
     protected override bool CheckMessageQueueImpl(out IntPtr source, out IntPtr data, out int length) {

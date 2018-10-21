@@ -27,6 +27,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
         void AirVRCameraRigActivated(AirVRCameraRig cameraRig);
         void AirVRCameraRigDeactivated(AirVRCameraRig cameraRig);
         void AirVRCameraRigHasBeenUnbound(AirVRCameraRig cameraRig);
+        void AirVRCameraRigUserDataReceived(AirVRCameraRig cameraRig, byte[] userData);
     }
 
     private static AirVRCameraRigManager _instanceOnCurrentScene;
@@ -224,6 +225,9 @@ public class AirVRCameraRigManager : MonoBehaviour {
                 onAirVRPlayerShowCopyright(playerID, serverMessage);
             }
         }
+        else if (message.Type.Equals(AirVRMessage.TypeUserData)) {
+            onAirVRPlayerUserDataReceived(playerID, serverMessage);
+        }
     }
 
     private void onAirVRSessionConnected(int playerID, AirVRServerMessage message) {
@@ -279,6 +283,13 @@ public class AirVRCameraRigManager : MonoBehaviour {
 
     private void onAirVRPlayerShowCopyright(int playerID, AirVRServerMessage message) {
         Debug.Log("(C) 2016-2018 onAirVR. All right reserved.");
+    }
+
+    private void onAirVRPlayerUserDataReceived(int playerID, AirVRServerMessage message) {
+        AirVRCameraRig cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
+        if (cameraRig != null && Delegate != null) {
+            Delegate.AirVRCameraRigUserDataReceived(cameraRig, message.Data_Decoded);
+        }
     }
 
     private void onAirVRSessionDisconnected(int playerID, AirVRServerMessage message) {

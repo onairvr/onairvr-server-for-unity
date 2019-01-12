@@ -46,7 +46,7 @@ You may clone this whole project. It is worth noting that the project itself is 
 
 onAirVR Server for Unity is [MIT licensed](https://github.com/onairvr/onairvr-server-for-unity/blob/master/LICENSE).
 
-It also contains our own [license file](https://github.com/onairvr/onairvr-server-for-unity/blob/master/Assets/onAirVR/Server/Editor/Misc/onairvr.license) for security. This license has the expiration date and we are going to update the file regularly so that the latest one never expires. Note that the current license expires on 2018-12-31.
+It also contains our own [license file](https://github.com/onairvr/onairvr-server-for-unity/blob/master/Assets/onAirVR/Server/Editor/Misc/onairvr.license) for security. This license has the expiration date and we are going to update the file regularly so that the latest one never expires. Note that the current license expires on 2019-12-31.
 
 
 ## Contact

@@ -67,13 +67,13 @@ public class AirVRTrackedControllerDeviceFeedback : AirVRTrackedDeviceFeedback {
     // implements AirVRPointerInputDeviceFeedback
     protected override byte raycastHitResultKey {
         get {
-            return (byte)AirVRTrackedControllerKey.RaycastHitResult;
+            return (byte)AirVRRightHandTrackerKey.RaycastHitResult;
         }
     }
 
     public override string name {
         get {
-            return AirVRInputDeviceName.TrackedController;
+            return AirVRInputDeviceName.RightHandTracker;
         }
     }
 }

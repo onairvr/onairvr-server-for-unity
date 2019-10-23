@@ -34,7 +34,7 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
     }
 
     void Update() {
-        if (_sceneBeingUnloaded == false && AirVRInput.GetDown(cameraRig, AirVRInput.Touchpad.Button.Back)) {
+        if (_sceneBeingUnloaded == false && AirVRInput.GetDown(cameraRig, AirVRInput.Button.Back)) {
             _sceneBeingUnloaded = true;
             StartCoroutine(loadScene(PointerSampleSceneName));
         }

@@ -17,13 +17,13 @@ public class AirVRGazePointer : AirVRPointer {
 
     public override bool primaryButtonPressed {
         get {
-            return AirVRInput.GetDown(cameraRig, AirVRInput.Touchpad.Button.Touch) || AirVRInput.GetDown(cameraRig, AirVRInput.Gamepad.Button.A);
+            return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Touch.Touchpad);
         }
     }
 
     public override bool primaryButtonReleased {
         get {
-            return AirVRInput.GetUp(cameraRig, AirVRInput.Touchpad.Button.Touch) || AirVRInput.GetUp(cameraRig, AirVRInput.Gamepad.Button.A);
+            return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Touch.Touchpad);
         }
     }
 

@@ -11,8 +11,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class AirVRSampleAdvancedScene : MonoBehaviour, AirVRCameraRigManager.EventHandler {
-    [SerializeField]
-    private AirVRCameraRig _primaryCameraRig;
+    [SerializeField] private AirVRCameraRig _primaryCameraRig = null;
 
     void Awake() {
         AirVRCameraRigManager.managerOnCurrentScene.Delegate = this;

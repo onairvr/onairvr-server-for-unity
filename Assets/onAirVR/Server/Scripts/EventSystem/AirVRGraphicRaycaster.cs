@@ -63,7 +63,7 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
     private List<RaycastHit> _raycastResults = new List<RaycastHit>();
 
     [System.NonSerialized] private Canvas _canvas;
-    [SerializeField] private AirVRPointer _pointer;
+    [SerializeField] private AirVRPointer _pointer = null;
 
     private Canvas canvas {
         get {

@@ -11,19 +11,19 @@ public class AirVRTrackedControllerPointer : AirVRPointer {
     // implements AirVRPointer
     protected override AirVRInput.Device device {
         get {
-            return AirVRInput.Device.TrackedController;
+            return AirVRInput.Device.RightHandTracker;
         }
     }
 
     public override bool primaryButtonPressed {
         get {
-            return AirVRInput.GetDown(cameraRig, AirVRInput.TrackedController.Button.TouchpadClick) || AirVRInput.GetDown(cameraRig, AirVRInput.TrackedController.Button.IndexTrigger);
+            return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Button.RIndexTrigger);
         }
     }
 
     public override bool primaryButtonReleased {
         get {
-            return AirVRInput.GetUp(cameraRig, AirVRInput.TrackedController.Button.TouchpadClick) || AirVRInput.GetUp(cameraRig, AirVRInput.TrackedController.Button.IndexTrigger);
+            return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Button.RIndexTrigger);
         }
     }
 }

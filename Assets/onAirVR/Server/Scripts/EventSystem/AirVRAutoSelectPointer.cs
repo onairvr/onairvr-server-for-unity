@@ -11,7 +11,7 @@ public class AirVRAutoSelectPointer : AirVRPointer {
     private AirVRInput.Device _currentDevice = AirVRInput.Device.HeadTracker;
 
     protected override void Update() {
-        AirVRInput.Device dev = AirVRInput.IsDeviceAvailable(cameraRig, AirVRInput.Device.TrackedController) ? AirVRInput.Device.TrackedController : AirVRInput.Device.HeadTracker;
+        AirVRInput.Device dev = AirVRInput.IsDeviceAvailable(cameraRig, AirVRInput.Device.RightHandTracker) ? AirVRInput.Device.RightHandTracker : AirVRInput.Device.HeadTracker;
         if (dev != _currentDevice) {
             if (AirVRInput.IsDeviceFeedbackEnabled(cameraRig, _currentDevice)) {
                 AirVRInput.DisableDeviceFeedback(cameraRig, _currentDevice);
@@ -33,9 +33,9 @@ public class AirVRAutoSelectPointer : AirVRPointer {
         get {
             switch (device) {
                 case AirVRInput.Device.HeadTracker:
-                    return AirVRInput.GetDown(cameraRig, AirVRInput.Touchpad.Button.Touch) || AirVRInput.GetDown(cameraRig, AirVRInput.Gamepad.Button.A);
-                case AirVRInput.Device.TrackedController:
-                    return AirVRInput.GetDown(cameraRig, AirVRInput.TrackedController.Button.TouchpadClick) || AirVRInput.GetDown(cameraRig, AirVRInput.TrackedController.Button.IndexTrigger);
+                    return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Touch.Touchpad);
+                case AirVRInput.Device.RightHandTracker:
+                    return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Button.RIndexTrigger);
             }
             return false;
         }
@@ -45,9 +45,9 @@ public class AirVRAutoSelectPointer : AirVRPointer {
         get {
             switch (device) {
                 case AirVRInput.Device.HeadTracker:
-                    return AirVRInput.GetUp(cameraRig, AirVRInput.Touchpad.Button.Touch) || AirVRInput.GetUp(cameraRig, AirVRInput.Gamepad.Button.A);
-                case AirVRInput.Device.TrackedController:
-                    return AirVRInput.GetUp(cameraRig, AirVRInput.TrackedController.Button.TouchpadClick) || AirVRInput.GetUp(cameraRig, AirVRInput.TrackedController.Button.IndexTrigger);
+                    return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Touch.Touchpad);
+                case AirVRInput.Device.RightHandTracker:
+                    return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Button.RIndexTrigger);
             }
             return false;
         }

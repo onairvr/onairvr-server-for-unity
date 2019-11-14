@@ -110,8 +110,9 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
         playerID = InvalidPlayerID;
 
-        inputStream = new AirVRServerInputStream();
-        inputStream.owner = this;
+        inputStream = new AirVRServerInputStream() {
+            owner = this
+        };
     }
 
     private void Start() {
@@ -144,6 +145,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
             onairvr_GetViewNumber(playerID, timeStamp, _cameraOrientation.x, _cameraOrientation.y, _cameraOrientation.z, _cameraOrientation.w, out _viewNumber);
             updateCameraTransforms(_config, _cameraPosition, _cameraOrientation);
+            updateControllerTransforms(_config);
 
             mediaStream.GetNextFramebufferTexturesAsRenderTargets(cameras);
         }
@@ -293,6 +295,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     protected virtual void onStartRender() { }
     protected virtual void onStopRender() { }
     protected abstract void updateCameraTransforms(AirVRClientConfig config, Vector3 centerEyePosition, Quaternion centerEyeOrientation);
+    protected virtual void updateControllerTransforms(AirVRClientConfig config) { }
 
     internal int playerID { get; private set; }
 

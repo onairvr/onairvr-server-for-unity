@@ -54,9 +54,9 @@ public class AirVRServerInputStream : AirVRInputStream {
 
     public AirVRServerInputStream() {
         addInputDevice(new AirVRHeadTrackerInputDevice());
-        addInputDevice(new AirVRTouchpadInputDevice());
-        addInputDevice(new AirVRGamepadInputDevice());
-        addInputDevice(new AirVRTrackedControllerInputDevice());
+        addInputDevice(new AirVRLeftHandTrackerInputDevice());
+        addInputDevice(new AirVRRightHandTrackerInputDevice());
+        addInputDevice(new AirVRControllerInputDevice());
     }
 
     public AirVRCameraRig owner { get; set; }
@@ -73,7 +73,7 @@ public class AirVRServerInputStream : AirVRInputStream {
         if (deviceName.Equals(AirVRInputDeviceName.HeadTracker)) {
             return new AirVRHeadTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
         }
-        else if (deviceName.Equals(AirVRInputDeviceName.TrackedController)) {
+        else if (deviceName.Equals(AirVRInputDeviceName.RightHandTracker)) {
             return new AirVRTrackedControllerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
         }
         return null;

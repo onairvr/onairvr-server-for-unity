@@ -1,6 +1,6 @@
 ﻿/***********************************************************
 
-  Copyright (c) 2017-2018 Clicked, Inc.
+  Copyright (c) 2017-present Clicked, Inc.
 
   Licensed under the MIT license found in the LICENSE file 
   in the Docs folder of the distributed package.
@@ -9,17 +9,19 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 
 public abstract class AirVRPointer : MonoBehaviour {
     public static List<AirVRPointer> pointers = new List<AirVRPointer>();
 
     private Texture2D _cookie;
 
-    [SerializeField] private AirVRCameraRig _cameraRig;
-    [SerializeField] private string _cookieTextureFilename;
-    [SerializeField] private float _depthScaleMultiplier;
+    [SerializeField] private AirVRCameraRig _cameraRig = null;
+    [SerializeField] private string _cookieTextureFilename = null;
+    [SerializeField] private float _depthScaleMultiplier = 0.015f;
 
     protected float depthScaleMultiplier {
         get {
@@ -33,11 +35,11 @@ public abstract class AirVRPointer : MonoBehaviour {
 
     private IEnumerator Start() {
         if (string.IsNullOrEmpty(_cookieTextureFilename) == false) {
-            WWW www = new WWW("file://" + System.IO.Path.Combine(Application.streamingAssetsPath, _cookieTextureFilename));
-            yield return www;
+            var request = UnityWebRequestTexture.GetTexture("file://" + System.IO.Path.Combine(Application.streamingAssetsPath, _cookieTextureFilename));
+            yield return request.SendWebRequest();
 
-            if (string.IsNullOrEmpty(www.error)) {
-                _cookie = www.texture;
+            if (!request.isNetworkError && !request.isHttpError) {
+                _cookie = (request.downloadHandler as DownloadHandlerTexture).texture;
             }
         }
     }
@@ -85,10 +87,10 @@ public abstract class AirVRPointer : MonoBehaviour {
         switch (device) {
             case AirVRInput.Device.HeadTracker:
                 return new Ray(_cameraRig.headPose.position, _cameraRig.headPose.forward);
-            case AirVRInput.Device.TrackedController:
+            case AirVRInput.Device.RightHandTracker:
                 Vector3 position = Vector3.zero;
                 Quaternion orientation = Quaternion.identity;
-                AirVRInput.GetTrackedDevicePositionAndOrientation(_cameraRig, AirVRInput.Device.TrackedController, out position, out orientation);
+                AirVRInput.GetTrackedDevicePositionAndOrientation(_cameraRig, AirVRInput.Device.RightHandTracker, out position, out orientation);
                 return new Ray(position, orientation * Vector3.forward);
         }
         return new Ray();

@@ -27,7 +27,7 @@ public class AirVRServerParamsReader {
 
 [Serializable]
 public class AirVRServerParams {
-    public const float DefaultMaxFrameRate = 60.0f;
+    public const float DefaultMaxFrameRate = 90.0f;
     public const float DefaultDefaultFrameRate = 30.0f;
     public const float DefaultApplicationFrameRate = 0.0f;
     public const int DefaultVideoBitrate = 24000000;
@@ -301,8 +301,10 @@ public class AirVRServer : MonoBehaviour {
 
     private bool _startedUp = false;
     private AirVRServerParams _serverParams;
+    private float _lastTimeEvalFps = 0.0f;
+    private int _frameCountSinceLastEvalFps = 0;
 
-    void Awake() {
+    private void Awake() {
         if (_instance != null) {
             new UnityException("[onAirVR] ERROR: There must exist only one AirVRServer instance.");
         }
@@ -310,7 +312,9 @@ public class AirVRServer : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
     }
 
-    void Start() {
+    private void Start() {
+        _lastTimeEvalFps = Time.realtimeSinceStartup;
+
         try {
             QualitySettings.vSyncCount = serverParams.VsyncCount;
 
@@ -364,7 +368,22 @@ public class AirVRServer : MonoBehaviour {
         }
     }
 
-    void OnDestroy() {
+    private void Update() {
+        const float evalFpsPeriod = 10.0f;
+
+        _frameCountSinceLastEvalFps++;
+
+        var now = Time.realtimeSinceStartup;
+        if (_lastTimeEvalFps + evalFpsPeriod < now) {
+            var fps = _frameCountSinceLastEvalFps / (now - _lastTimeEvalFps);
+            Debug.Log(string.Format("[onAirVR Server] FPS: {0:0.0}", fps));
+
+            _lastTimeEvalFps = now;
+            _frameCountSinceLastEvalFps = 0;
+        }
+    }
+
+    private void OnDestroy() {
         if (_startedUp) {
             GL.IssuePluginEvent(onairvr_Shutdown_RenderThread_Func(), 0);
             GL.Flush();

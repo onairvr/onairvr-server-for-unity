@@ -15,7 +15,7 @@ using System.IO;
 public class PackageBuilder {
     [MenuItem("onAirVR/Export onAirVR Server...")]
     public static void ExportAirVRServer() {
-        string targetPath = EditorUtility.SaveFilePanel("Export onAirVR Server...", "", "onAirVRServer", "unitypackage");
+        string targetPath = EditorUtility.SaveFilePanel("Export onAirVR Server...", "", "onairvr-server", "unitypackage");
         if (string.IsNullOrEmpty(targetPath)) {
             return;
         }

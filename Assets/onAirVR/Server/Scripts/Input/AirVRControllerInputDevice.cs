@@ -6,7 +6,11 @@ public class AirVRControllerInputDevice : AirVRInputDevice {
     private const float AxisAsButtonThreshold = 0.5f;   // refer OVRInput.cs in Oculus Utilities
 
     // implements AirVRInputDevice
-    protected override string deviceName => AirVRInputDeviceName.Controller;
+    protected override string deviceName {
+        get {
+            return AirVRInputDeviceName.Controller;
+        }
+    }
 
     protected override void MakeControlList() {
         AddControlTouch((byte)AirVRControllerKey.Touchpad);

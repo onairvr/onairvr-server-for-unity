@@ -9,8 +9,6 @@
 
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
-
 public class AirVRSamplePlayer : MonoBehaviour {
     private const float ThrowSpeed = 12.0f;
     private const float ThrowTorqueSpeed = 20.0f;
@@ -75,7 +73,7 @@ public class AirVRSamplePlayer : MonoBehaviour {
     }
 
     private void processMovement() {
-        if (_thisCharacterController.enabled) {
+        if (_thisCharacterController != null && _thisCharacterController.enabled) {
             Vector3 moveDirection = inputDirection;
             if (moveDirection.sqrMagnitude > 1.0f) {
                 moveDirection = moveDirection.normalized;
@@ -133,6 +131,10 @@ public class AirVRSamplePlayer : MonoBehaviour {
     }
 
     public void EnableInteraction(bool enable) {
+        if (_thisCharacterController == null) {
+            return;
+        }
+
         _thisCharacterController.enabled = enable;
 
         if (enable == false) {

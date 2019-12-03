@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class AirVRRightHandTrackerInputDevice : AirVRInputDevice {
     // implements AirVRInputDevice
-    protected override string deviceName => AirVRInputDeviceName.RightHandTracker;
+    protected override string deviceName {
+        get {
+            return AirVRInputDeviceName.RightHandTracker;
+        }
+    }
 
     protected override void MakeControlList() {
         AddControlTransform((byte)AirVRRightHandTrackerKey.Transform);

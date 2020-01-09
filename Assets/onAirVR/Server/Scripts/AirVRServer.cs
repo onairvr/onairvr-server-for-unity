@@ -1,6 +1,6 @@
 ﻿/***********************************************************
 
-  Copyright (c) 2017-2018 Clicked, Inc.
+  Copyright (c) 2017-present Clicked, Inc.
 
   Licensed under the MIT license found in the LICENSE file 
   in the Docs folder of the distributed package.
@@ -30,7 +30,8 @@ public class AirVRServerParams {
     public const float DefaultMaxFrameRate = 90.0f;
     public const float DefaultDefaultFrameRate = 30.0f;
     public const float DefaultApplicationFrameRate = 0.0f;
-    public const int DefaultVideoBitrate = 24000000;
+    public const int DefaultMaxVideoBitrate = 160000000;
+    public const int DefaultDefaultVideoBitrate = 24000000;
     public const int DefaultMaxClientCount = 1;
     public const int DefaultPort = 9090;
     public const string DefaultLicense = "onairvr.license";
@@ -40,7 +41,8 @@ public class AirVRServerParams {
         defaultFrameRate = DefaultDefaultFrameRate;
         applicationFrameRate = DefaultApplicationFrameRate;
         vsyncCount = QualitySettings.vSyncCount;
-        videoBitrate = DefaultVideoBitrate;
+        maxVideoBitrate = DefaultMaxVideoBitrate;
+        defaultVideoBitrate = DefaultDefaultVideoBitrate;
         maxClientCount = DefaultMaxClientCount;
         stapPort = DefaultPort;
         license = DefaultLicense;
@@ -51,7 +53,8 @@ public class AirVRServerParams {
         defaultFrameRate = initParams.defaultFrameRate;
         applicationFrameRate = DefaultApplicationFrameRate;
         vsyncCount = QualitySettings.vSyncCount;
-        videoBitrate = initParams.videoBitrate;
+        maxVideoBitrate = DefaultMaxVideoBitrate;
+        defaultVideoBitrate = initParams.videoBitrate;
         maxClientCount = initParams.maxClientCount;
         stapPort = initParams.port;
         license = initParams.licenseFilePath;
@@ -61,23 +64,27 @@ public class AirVRServerParams {
     [SerializeField] private float defaultFrameRate;
     [SerializeField] private float applicationFrameRate;
     [SerializeField] private int vsyncCount;
-    [SerializeField] private int videoBitrate;
+    [SerializeField] private int maxVideoBitrate;
+    [SerializeField] private int defaultVideoBitrate;
     [SerializeField] private int maxClientCount;
     [SerializeField] private string license;
     [SerializeField] private int stapPort;
     [SerializeField] private int ampPort;
     [SerializeField] private bool loopbackOnly;
+    [SerializeField] private string profiler;
 
     public float MaxFrameRate           { get { return maxFrameRate; } }
     public float DefaultFrameRate       { get { return defaultFrameRate; } }
     public float ApplicationFrameRate   { get { return applicationFrameRate; } }
     public int VsyncCount               { get { return vsyncCount; } }
-    public int VideoBitrate             { get { return videoBitrate; } }
+    public int MaxVideoBitrate          { get { return maxVideoBitrate; } }
+    public int DefaultVideoBitrate      { get { return defaultVideoBitrate; } }
     public int MaxClientCount           { get { return maxClientCount; } }
     public string License               { get { return license; } }
     public int StapPort                 { get { return stapPort; } }
     public int AmpPort                  { get { return ampPort; } }
     public bool LoopbackOnly            { get { return loopbackOnly; } }
+    public string Profiler              { get { return profiler; } }
 
     private int parseInt(string value, int defaultValue, Func<int, bool> predicate, Action<string> failed = null) {
         int result;
@@ -172,7 +179,7 @@ public class AirVRServerParams {
                 license = pairs[key];
             }
             else if (key.Equals("onairvr_video_bitrate")) {
-                videoBitrate = parseInt(pairs[key], VideoBitrate,
+                defaultVideoBitrate = parseInt(pairs[key], DefaultVideoBitrate,
                     (parsed) => {
                         return parsed > 0;
                     });
@@ -189,18 +196,24 @@ public class AirVRServerParams {
                         return parsed >= 0;
                     });
             }
+            else if (key.Equals("onairvr_profiler")) {
+                profiler = pairs[key];
+            }
         }
     }
 }
 
 public class AirVRServer : MonoBehaviour {
-    private const int StartupErrorNotSupportdingGPU = -1;
+    private const int StartupErrorNotSupportingGPU = -1;
     private const int StartupErrorLicenseNotYetVerified = -2;
     private const int StartupErrorLicenseFileNotFound = -3;
     private const int StartupErrorInvalidLicenseFile = -4;
     private const int StartupErrorLicenseExpired = -5;
 
-    private const int GroupOfPictures = 60;
+    private const int GroupOfPictures = 0; // use infinite gop by default
+
+    private const int ProfilerFrame = 0x01;
+    private const int ProfilerReport = 0x02;
 
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_GetAirVRServerPluginPtr(ref System.IntPtr result);
@@ -222,6 +235,9 @@ public class AirVRServer : MonoBehaviour {
 
     [DllImport(AirVRServerPlugin.Name)]
     private static extern IntPtr onairvr_Shutdown_RenderThread_Func();
+
+    [DllImport(AirVRServerPlugin.Name)]
+    private static extern void onairvr_EnableProfiler(int profilers);
 
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_SetVideoEncoderParameters(float maxFrameRate, float defaultFrameRate,
@@ -283,6 +299,8 @@ public class AirVRServer : MonoBehaviour {
         }
     }
 
+    //internal static void HandleProfilerFrame()
+
     public static EventHandler Delegate {
         set {
             _Delegate = value;
@@ -319,7 +337,7 @@ public class AirVRServer : MonoBehaviour {
             QualitySettings.vSyncCount = serverParams.VsyncCount;
 
             onairvr_SetLicenseFile(Application.isEditor ? System.IO.Path.Combine("Assets/onAirVR/Server/Editor/Misc", AirVRServerParams.DefaultLicense) : serverParams.License);
-            onairvr_SetVideoEncoderParameters(serverParams.MaxFrameRate, serverParams.DefaultFrameRate, serverParams.VideoBitrate, serverParams.VideoBitrate, GroupOfPictures);
+            onairvr_SetVideoEncoderParameters(serverParams.MaxFrameRate, serverParams.DefaultFrameRate, serverParams.MaxVideoBitrate, serverParams.DefaultVideoBitrate, GroupOfPictures);
 
             int startupResult = onairvr_Startup(serverParams.MaxClientCount, serverParams.StapPort, serverParams.AmpPort, serverParams.LoopbackOnly, AudioSettings.outputSampleRate);
             if (startupResult == 0) {   // no error
@@ -330,12 +348,26 @@ public class AirVRServer : MonoBehaviour {
                 GL.IssuePluginEvent(onairvr_Startup_RenderThread_Func(), 0);
                 _startedUp = true;
 
+                switch (serverParams.Profiler) {
+                    case "full":
+                        onairvr_EnableProfiler(ProfilerFrame | ProfilerReport);
+                        break;
+                    case "frame":
+                        onairvr_EnableProfiler(ProfilerFrame);
+                        break;
+                    case "report":
+                        onairvr_EnableProfiler(ProfilerReport);
+                        break;
+                    default:
+                        break;
+                }
+
                 Debug.Log("[onAirVR] INFO: The onAirVR Server has started on port " + serverParams.StapPort + ".");
             }
             else {
                 string reason;
                 switch (startupResult) {
-                    case StartupErrorNotSupportdingGPU:
+                    case StartupErrorNotSupportingGPU:
                         reason = "Graphic device is not supported";
                         break;
                     case StartupErrorLicenseNotYetVerified:
@@ -370,6 +402,10 @@ public class AirVRServer : MonoBehaviour {
 
     private void Update() {
         const float evalFpsPeriod = 10.0f;
+
+        if (string.IsNullOrEmpty(serverParams.Profiler)) {
+            return;
+        }
 
         _frameCountSinceLastEvalFps++;
 

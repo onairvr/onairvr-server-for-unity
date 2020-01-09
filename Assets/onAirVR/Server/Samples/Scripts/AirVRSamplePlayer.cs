@@ -1,6 +1,6 @@
 ﻿/***********************************************************
 
-  Copyright (c) 2017-2018 Clicked, Inc.
+  Copyright (c) 2017-present Clicked, Inc.
 
   Licensed under the MIT license found in the LICENSE file 
   in the Docs folder of the distributed package.
@@ -61,17 +61,6 @@ public class AirVRSamplePlayer : MonoBehaviour {
         return Vector2.zero;
     }
 
-    private void processHandVisibility() {
-        var available = AirVRInput.IsDeviceAvailable(_cameraRig, AirVRInput.Device.LeftHandTracker);
-        if (_leftHand.activeSelf != available) {
-            _leftHand.SetActive(available);
-        }
-        available = AirVRInput.IsDeviceAvailable(_cameraRig, AirVRInput.Device.RightHandTracker);
-        if (_rightHand.activeSelf != available) {
-            _rightHand.SetActive(available);
-        }
-    }
-
     private void processMovement() {
         if (_thisCharacterController != null && _thisCharacterController.enabled) {
             Vector3 moveDirection = inputDirection;
@@ -114,13 +103,10 @@ public class AirVRSamplePlayer : MonoBehaviour {
         _thisTransform = transform;
         _thisCharacterController = GetComponent<CharacterController>();
         _cameraRig = GetComponentInChildren<AirVRStereoCameraRig>();
-        _leftHand = transform.Find("AirVRCameraRig/TrackingSpace/LeftHandAnchor/LeftHand").gameObject;
-        _rightHand = transform.Find("AirVRCameraRig/TrackingSpace/RightHandAnchor/RightHand").gameObject;
         _soundShot = transform.Find("SoundShot").GetComponent<AudioSource>();
     }
 
     void Update() {
-        processHandVisibility();
         processMovement();
         processInput();
     }

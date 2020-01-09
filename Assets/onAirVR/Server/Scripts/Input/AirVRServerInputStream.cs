@@ -1,6 +1,6 @@
 ﻿/***********************************************************
 
-  Copyright (c) 2017-2018 Clicked, Inc.
+  Copyright (c) 2017-present Clicked, Inc.
 
   Licensed under the MIT license found in the LICENSE file 
   in the Docs folder of the distributed package.
@@ -19,7 +19,8 @@ public class AirVRServerInputStream : AirVRInputStream {
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_UnregisterInputSender(int playerID, byte id);
 
-
+    [DllImport(AirVRServerPlugin.Name)]
+    private static extern void onairvr_BeginPendInput(int playerID, ref long timestamp);
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_PendTrackedDeviceFeedback(int playerID, byte deviceID, byte controlID,
                                                                  float worldRayOriginX, float worldRayOriginY, float worldRayOriginZ,
@@ -47,7 +48,7 @@ public class AirVRServerInputStream : AirVRInputStream {
     private static extern bool onairvr_GetInputFloat(int playerID, byte deviceID, byte controlID, ref float value);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_SendPendingInputs(int playerID);
+    private static extern void onairvr_SendPendingInputs(int playerID, long timestamp);
 
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_ResetInput(int playerID);
@@ -221,10 +222,16 @@ public class AirVRServerInputStream : AirVRInputStream {
     }
 
     // implements AirVRInputStreaming
-    protected override float sendingRatePerSec {
+    protected override float maxSendingRatePerSec {
         get {
             return 90.0f;
         }
+    }
+
+    protected override void BeginPendInputImpl(ref long timestamp) {
+        Assert.IsTrue(owner != null && owner.isBoundToClient);
+
+        onairvr_BeginPendInput(owner.playerID, ref timestamp);
     }
 
     protected override void UnregisterInputSenderImpl(byte id) {
@@ -299,9 +306,9 @@ public class AirVRServerInputStream : AirVRInputStream {
         return onairvr_GetInputFloat(owner.playerID, deviceID, controlID, ref value);
     }
 
-    protected override void SendPendingInputEventsImpl() {
+    protected override void SendPendingInputEventsImpl(long timestamp) {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
-        onairvr_SendPendingInputs(owner.playerID);
+        onairvr_SendPendingInputs(owner.playerID, timestamp);
     }
 
     protected override void ResetInputImpl() {

@@ -1,6 +1,6 @@
 ﻿/***********************************************************
 
-  Copyright (c) 2017-2018 Clicked, Inc.
+  Copyright (c) 2017-present Clicked, Inc.
 
   Licensed under the MIT license found in the LICENSE file 
   in the Docs folder of the distributed package.
@@ -21,6 +21,8 @@ public class AirVRServerMessage : AirVRMessage {
     // Type : Event, From : Session
     public const string NameConnected = "Connected";
     public const string NameDisconnected = "Disconnected";
+    public const string NameProfilerFrame = "ProfilerFrame";
+    public const string NameProfilerReport = "ProfilerReport";
 
     // Type : Event, From : Player
     public const string NameCreated = "Created";
@@ -52,6 +54,18 @@ public class AirVRServerMessage : AirVRMessage {
     // Type : Event
     public string From;
     public string Name;
+
+    // Type : Event, From : Session, Name : ProfilerFrame
+    public double OverallLatency;
+    public double NetworkLatency;
+    public double DecodeLatency;
+
+    // Type : Event, From : Session, Name : ProfilerReport
+    public int FrameCount;
+    public double Duration;
+    public double AvgOverallLatency;
+    public double AvgNetworkLatency;
+    public double AvgDecodeLatency;
 
     // Type : Event, From : InputStream, Name : RemoteInputDeviceRegistered / RemoteInputDeviceUnregistered
     public int DeviceID;

@@ -12,13 +12,12 @@ onAirVR consists of two applications - mobile VR client app & content app on PC.
 
 Please ensure you have right hardwares :
 
-* **Google Daydream** or **Oculus Mobile** device
+* **Oculus Mobile** device
 * **Windows** desktop powered by **NVIDIA graphics**
 
 This plugin is for PC content development, and the plugins for mobile VR platforms we supports are belows :
 
 - [onAirVR Client for Oculus Mobile](https://github.com/onairvr/onairvr-client-for-oculus-mobile)
-- [onAirVR Client for Google VR](https://github.com/onairvr/onairvr-client-for-googlevr)
 
 
 
@@ -27,7 +26,7 @@ This plugin is for PC content development, and the plugins for mobile VR platfor
 
 You can download the pre-exported package for each version from [Releases](https://github.com/onairvr/onairvr-server-for-unity/releases).
 
-You may clone this whole project. It is worth noting that the project itself is maintained on Unity 5.6.5f1 which is the lowest compatible version, but it is safely migrated to higher versions of Unity.
+You may clone this whole project. It is worth noting that the project itself is maintained on Unity 2018.1.9f2 which is the lowest compatible version, but it is safely migrated to higher versions of Unity.
 
 
 
@@ -46,7 +45,7 @@ You may clone this whole project. It is worth noting that the project itself is 
 
 onAirVR Server for Unity is [MIT licensed](https://github.com/onairvr/onairvr-server-for-unity/blob/master/LICENSE).
 
-It also contains our own [license file](https://github.com/onairvr/onairvr-server-for-unity/blob/master/Assets/onAirVR/Server/Editor/Misc/onairvr.license) for security. This license has the expiration date and we are going to update the file regularly so that the latest one never expires. Note that the current license expires on 2019-12-31.
+It also contains our own [license file](https://github.com/onairvr/onairvr-server-for-unity/blob/master/Assets/onAirVR/Server/Editor/Misc/onairvr.license) for security. This license has the expiration date and we are going to update the file regularly so that the latest one never expires. Note that the current license expires on 2020-12-31.
 
 
 ## Contact

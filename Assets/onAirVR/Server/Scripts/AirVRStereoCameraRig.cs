@@ -132,8 +132,24 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
     }
 
     protected override void setupCamerasOnBound(AirVRClientConfig config) {
+#if UNITY_2018_2_OR_NEWER
+        leftEyeCamera.usePhysicalProperties = true;
+        leftEyeCamera.focalLength = config.cameraFocalLength;
+        leftEyeCamera.sensorSize = config.cameraSensorSize;
+        leftEyeCamera.lensShift = config.cameraLeftLensShift;
+        leftEyeCamera.aspect = config.cameraAspect;
+        leftEyeCamera.gateFit = Camera.GateFitMode.None;
+
+        rightEyeCamera.usePhysicalProperties = true;
+        rightEyeCamera.focalLength = config.cameraFocalLength;
+        rightEyeCamera.sensorSize = config.cameraSensorSize;
+        rightEyeCamera.lensShift = config.cameraRightLensShift;
+        leftEyeCamera.aspect = config.cameraAspect;
+        rightEyeCamera.gateFit = Camera.GateFitMode.None;
+#else
         leftEyeCamera.projectionMatrix = config.GetLeftEyeCameraProjection(leftEyeCamera.nearClipPlane, leftEyeCamera.farClipPlane);
         rightEyeCamera.projectionMatrix = config.GetRightEyeCameraProjection(rightEyeCamera.nearClipPlane, rightEyeCamera.farClipPlane);
+#endif
     }
 
     protected override void onStartRender() {

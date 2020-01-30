@@ -17,7 +17,7 @@ public enum AirVRClientType {
 
 [Serializable]
 public class AirVRClientConfig {
-	public AirVRClientConfig() {
+    public AirVRClientConfig() {
         LeftEyeCameraNearPlane = new float[4];
     }
 
@@ -101,6 +101,41 @@ public class AirVRClientConfig {
     public string userID {
         get {
             return UserID;
+        }
+    }
+
+    public Vector2 cameraSensorSize {
+        get {
+            return new Vector2(LeftEyeCameraNearPlane[2] - LeftEyeCameraNearPlane[0],
+                               LeftEyeCameraNearPlane[1] - LeftEyeCameraNearPlane[3]);
+        }
+    }
+
+    public float cameraFocalLength {
+        get {
+            return 1;
+        }
+    }
+
+    public Vector2 cameraLeftLensShift {
+        get {
+            return new Vector2((LeftEyeCameraNearPlane[2] + LeftEyeCameraNearPlane[0]) / 2 / (LeftEyeCameraNearPlane[2] - LeftEyeCameraNearPlane[0]),
+                               (LeftEyeCameraNearPlane[1] + LeftEyeCameraNearPlane[3]) / 2 / (LeftEyeCameraNearPlane[1] - LeftEyeCameraNearPlane[3]));
+        }
+    }
+
+    public Vector2 cameraRightLensShift {
+        get {
+            var result = cameraLeftLensShift;
+            result.x = -result.x;
+
+            return result;
+        }
+    }
+
+    public float cameraAspect {
+        get {
+            return cameraSensorSize.x / cameraSensorSize.y;
         }
     }
 }

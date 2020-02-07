@@ -46,8 +46,9 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
 
         if (selected) {
             AirVRSamplePlayer player = selected.GetComponentInParent<AirVRSamplePlayer>();
-            player.EnableInteraction(true);
-
+            if (player != null) {
+                player.EnableInteraction(true);
+            }
             music.Play();
         }
     }

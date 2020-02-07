@@ -48,7 +48,19 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
     }
 
     protected override void setupCamerasOnBound(AirVRClientConfig config) {
-        _cameras[0].projectionMatrix = config.GetLeftEyeCameraProjection(_cameras[0].nearClipPlane, _cameras[0].farClipPlane);
+        var projection = config.GetCameraProjection(camera.nearClipPlane, camera.farClipPlane);
+        if (projection == Matrix4x4.zero) { return; }
+
+#if UNITY_2018_2_OR_NEWER
+        camera.usePhysicalProperties = true;
+        camera.focalLength = config.cameraFocalLength;
+        camera.sensorSize = config.cameraSensorSize;
+        camera.lensShift = config.cameraLeftLensShift;
+        camera.aspect = config.cameraAspect;
+        camera.gateFit = Camera.GateFitMode.None;
+#else
+        camera.projectionMatrix = projection;
+#endif
     }
 
     protected override void updateCameraTransforms(AirVRClientConfig config, Vector3 centerEyePosition, Quaternion centerEyeOrientation) {

@@ -28,7 +28,7 @@ public class AirVRServerParamsReader {
 [Serializable]
 public class AirVRServerParams {
     public const float DefaultMaxFrameRate = 90.0f;
-    public const float DefaultDefaultFrameRate = 30.0f;
+    public const float DefaultDefaultFrameRate = 60.0f;
     public const float DefaultApplicationFrameRate = 0.0f;
     public const int DefaultMaxVideoBitrate = 160000000;
     public const int DefaultDefaultVideoBitrate = 24000000;

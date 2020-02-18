@@ -33,7 +33,7 @@ public class AirVRAutoSelectPointer : AirVRPointer {
         get {
             switch (device) {
                 case AirVRInput.Device.HeadTracker:
-                    return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Touch.Touchpad);
+                    return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Touchable.Touchpad);
                 case AirVRInput.Device.RightHandTracker:
                     return AirVRInput.GetDown(cameraRig, AirVRInput.Button.A) || AirVRInput.GetDown(cameraRig, AirVRInput.Button.RIndexTrigger);
             }
@@ -45,7 +45,7 @@ public class AirVRAutoSelectPointer : AirVRPointer {
         get {
             switch (device) {
                 case AirVRInput.Device.HeadTracker:
-                    return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Touch.Touchpad);
+                    return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Touchable.Touchpad);
                 case AirVRInput.Device.RightHandTracker:
                     return AirVRInput.GetUp(cameraRig, AirVRInput.Button.A) || AirVRInput.GetUp(cameraRig, AirVRInput.Button.RIndexTrigger);
             }

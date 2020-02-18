@@ -47,6 +47,11 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
         }
     }
 
+    protected override void init() {
+        inputStream.AddInputDevice(new AirVRHeadTrackerInputDevice());
+        inputStream.AddInputDevice(new AirVRScreenTouchInputDevice());
+    }
+
     protected override void setupCamerasOnBound(AirVRClientConfig config) {
         var projection = config.GetCameraProjection(camera.nearClipPlane, camera.farClipPlane);
         if (projection == Matrix4x4.zero) { return; }

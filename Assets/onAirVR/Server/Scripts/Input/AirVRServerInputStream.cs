@@ -28,9 +28,6 @@ public class AirVRServerInputStream : AirVRInputStream {
                                                                  float worldHitNormalX, float worldHitNormalY, float worldHitNormalZ, byte policy);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_GetInputTouch(int playerID, byte deviceID, byte controlID, ref float posX, ref float posY, ref float touch);
-
-    [DllImport(AirVRServerPlugin.Name)]
     private static extern bool onairvr_GetInputTransformWithTimeStamp(int playerID, byte deviceID, byte controlID, ref double timeStamp,
                                                                       ref float posX, ref float posY, ref float posZ, 
                                                                       ref float rotX, ref float rotY, ref float rotZ, ref float retW);
@@ -53,18 +50,7 @@ public class AirVRServerInputStream : AirVRInputStream {
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void onairvr_ResetInput(int playerID);
 
-    public AirVRServerInputStream() {
-        addInputDevice(new AirVRHeadTrackerInputDevice());
-        addInputDevice(new AirVRLeftHandTrackerInputDevice());
-        addInputDevice(new AirVRRightHandTrackerInputDevice());
-        addInputDevice(new AirVRControllerInputDevice());
-    }
-
     public AirVRCameraRig owner { get; set; }
-
-    private void addInputDevice(AirVRInputDevice device) {
-        receivers.Add(device.name, device);
-    }
 
     private void addDeviceFeedback(AirVRDeviceFeedback feedback) {
         senders.Add(feedback.name, feedback);
@@ -101,6 +87,10 @@ public class AirVRServerInputStream : AirVRInputStream {
         }
 
         base.Init();
+    }
+
+    public void AddInputDevice(AirVRInputDevice device) {
+        receivers.Add(device.name, device);
     }
 
     public bool GetTransform(string deviceName, byte controlID, ref Vector3 position, ref Quaternion orientation) {
@@ -164,6 +154,20 @@ public class AirVRServerInputStream : AirVRInputStream {
             return (receivers[deviceName] as AirVRInputDevice).GetButtonUp(controlID);
         }
         return false;
+    }
+
+    public int GetTouchCount(string deviceName) {
+        if (receivers.ContainsKey(deviceName)) {
+            return (receivers[deviceName] as AirVRInputDevice).GetTouchCount();
+        }
+        return 0;
+    }
+
+    public AirVRInput.Touch GetTouch(string deviceName, int index) {
+        if (receivers.ContainsKey(deviceName)) {
+            return (receivers[deviceName] as AirVRInputDevice).GetTouch(index);
+        }
+        return null;
     }
 
     public bool CheckIfInputDeviceAvailable(string deviceName) {
@@ -269,11 +273,6 @@ public class AirVRServerInputStream : AirVRInputStream {
 
     protected override void PendInputFloatImpl(byte deviceID, byte controlID, float value, byte policy) {
         Assert.IsTrue(false);
-    }
-
-    protected override bool GetInputTouchImpl(byte deviceID, byte controlID, ref Vector2 position, ref float touch) {
-        Assert.IsNotNull(owner);
-        return onairvr_GetInputTouch(owner.playerID, deviceID, controlID, ref position.x, ref position.y, ref touch);
     }
 
     protected override bool GetInputTransformImpl(byte deviceID, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation) {

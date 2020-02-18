@@ -126,6 +126,11 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
     }
 
     protected override void init() {
+        inputStream.AddInputDevice(new AirVRHeadTrackerInputDevice());
+        inputStream.AddInputDevice(new AirVRLeftHandTrackerInputDevice());
+        inputStream.AddInputDevice(new AirVRRightHandTrackerInputDevice());
+        inputStream.AddInputDevice(new AirVRControllerInputDevice());
+
         if (_trackingModelObject == null) {
             _trackingModelObject = createTrackingModelObject(trackingModel);
         }
@@ -144,7 +149,7 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
         rightEyeCamera.focalLength = config.cameraFocalLength;
         rightEyeCamera.sensorSize = config.cameraSensorSize;
         rightEyeCamera.lensShift = config.cameraRightLensShift;
-        leftEyeCamera.aspect = config.cameraAspect;
+        rightEyeCamera.aspect = config.cameraAspect;
         rightEyeCamera.gateFit = Camera.GateFitMode.None;
 #else
         leftEyeCamera.projectionMatrix = config.GetLeftEyeCameraProjection(leftEyeCamera.nearClipPlane, leftEyeCamera.farClipPlane);

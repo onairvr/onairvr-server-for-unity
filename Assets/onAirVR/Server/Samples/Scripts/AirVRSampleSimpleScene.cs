@@ -16,8 +16,9 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
     private const string PointerSampleSceneName = "B. Event System (experimental)";
 
     private bool _sceneBeingUnloaded;
+    private AirVRStereoCameraRig _stereoRig;
+    private AirVRMonoCameraRig _monoRig;
 
-    public AirVRCameraRig cameraRig;
     public AudioSource music;
 
     private IEnumerator loadScene(string sceneName) {
@@ -26,6 +27,9 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
     }
 
     void Awake() {
+        _stereoRig = FindObjectOfType<AirVRStereoCameraRig>();
+        _monoRig = FindObjectOfType<AirVRMonoCameraRig>();
+
         AirVRCameraRigManager.managerOnCurrentScene.Delegate = this;
     }
 
@@ -34,9 +38,20 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
     }
 
     void Update() {
-        if (_sceneBeingUnloaded == false && AirVRInput.GetDown(cameraRig, AirVRInput.Button.Back)) {
+        if (_sceneBeingUnloaded == false && AirVRInput.GetDown(_stereoRig, AirVRInput.Button.Back)) {
             _sceneBeingUnloaded = true;
             StartCoroutine(loadScene(PointerSampleSceneName));
+        }
+
+        var touchCount = AirVRInput.GetScreenTouchCount(_monoRig);
+        if (touchCount > 0) {
+            var trace = " ";
+            for (var index = 0; index < touchCount; index++) {
+                var touch = AirVRInput.GetScreenTouch(_monoRig, index);
+                trace += string.Format("[id: {0}, phase: {1}, x: {2}, y: {3}] ", touch.fingerID, touch.phase, touch.position.x, touch.position.y);
+            }
+
+            Debug.Log(trace);
         }
     }
 

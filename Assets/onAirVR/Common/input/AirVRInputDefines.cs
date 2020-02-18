@@ -12,6 +12,7 @@ public static class AirVRInputDeviceName {
     public const string LeftHandTracker = "LeftHandTracker";
     public const string RightHandTracker = "RightHandTracker";
     public const string Controller = "Controller";
+    public const string ScreenTouch = "ScreenTouch";
 }
 
 public enum AirVRHeadTrackerKey {
@@ -85,4 +86,11 @@ public enum AirVRControllerKey {
     ExtButtonRThumbstickRight,
 
     Max
+}
+
+public enum AirVRScreenTouchKey {
+    // reserve 0 ~ 9 for touches
+
+    TouchCount = 10,
+
 }

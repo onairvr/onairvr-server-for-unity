@@ -41,7 +41,7 @@ public class AirVRSamplePlayer : MonoBehaviour {
     private Vector3 inputDirection {
         get {
             Vector2 result = Vector2.zero;
-            if (AirVRInput.Get(_cameraRig, AirVRInput.Touch.Touchpad)) {
+            if (AirVRInput.Get(_cameraRig, AirVRInput.Touchable.Touchpad)) {
                 result += translateTouchPositionToMoveDirection(AirVRInput.Get(_cameraRig, AirVRInput.Axis2D.Touchpad) * 5.0f);
             }
             result += AirVRInput.Get(_cameraRig, AirVRInput.Axis2D.LThumbstick);

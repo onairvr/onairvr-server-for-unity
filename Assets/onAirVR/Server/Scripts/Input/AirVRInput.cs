@@ -31,7 +31,7 @@ public static class AirVRInput {
         RHandTrigger
     }
 
-    public enum Touch {
+    public enum Touchable {
         Touchpad
     }
 
@@ -65,6 +65,85 @@ public static class AirVRInput {
         RThumbstickRight
     }
 
+    public class Touch : AirVRInputDevice.Control {
+        private Vector2 _position;
+        private Phase _prevPhase = Phase.Ended;
+        private Phase _phase = Phase.Ended;
+
+        public int fingerID { get; private set; }
+
+        public Vector2 position {
+            get {
+                return _position;
+            }
+        }
+
+        public TouchPhase phase {
+            get {
+                switch (_phase) {
+                    case Phase.Canceled:
+                        return TouchPhase.Canceled;
+                    case Phase.Ended:
+                        return TouchPhase.Ended;
+                    case Phase.Moved:
+                        return pressed(_prevPhase) == false ? TouchPhase.Began : TouchPhase.Moved;
+                    case Phase.Stationary:
+                        return pressed(_prevPhase) == false ? TouchPhase.Began : TouchPhase.Stationary;
+                    default:
+                        Assert.IsTrue(false);
+                        return TouchPhase.Ended;
+                }
+            }
+        }
+
+        public bool touch {
+            get {
+                return pressed(_phase);
+            }
+        }
+
+        public bool active {
+            get {
+                return pressed(_phase) || pressed(_prevPhase);
+            }
+        }
+
+        public override void PollInput(AirVRInputDevice device, AirVRInputStream inputStream, byte id) {
+            var touch = 0.0f;
+            inputStream.GetTouch(device, id, out _position, out touch);
+
+            fingerID = id;
+            _prevPhase = _phase;
+            _phase = parsePhase(touch);
+        }
+
+        private Phase parsePhase(float touch) {
+            if (touch == 0.5f) {
+                return Phase.Canceled;
+            }
+            else if (touch == 1.0f) {
+                return Phase.Stationary;
+            }
+            else if (touch == 2.0f) {
+                return Phase.Moved;
+            }
+            else {
+                return Phase.Ended;
+            }
+        }
+
+        private bool pressed(Phase phase) {
+            return phase == Phase.Stationary || phase == Phase.Moved;
+        }
+
+        private enum Phase {
+            Ended,
+            Canceled,
+            Stationary,
+            Moved
+        }
+    }
+
     private static byte parseControlID(Axis2D axis) {
         switch (axis) {
             case Axis2D.Touchpad:
@@ -93,9 +172,9 @@ public static class AirVRInput {
         return 0;
     }
 
-    private static byte parseControlID(Touch touch) {
-        switch (touch) {
-            case Touch.Touchpad:
+    private static byte parseControlID(Touchable touchable) {
+        switch (touchable) {
+            case Touchable.Touchpad:
                 return (byte)AirVRControllerKey.ExtTouchTouchpad;
         }
         Assert.IsTrue(false);
@@ -250,28 +329,36 @@ public static class AirVRInput {
         return GetAxis(cameraRig, AirVRInputDeviceName.Controller, parseControlID(axis));
     }
 
-    public static bool Get(AirVRCameraRig cameraRig, Touch touch) {
-        return GetButton(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touch));
+    public static bool Get(AirVRCameraRig cameraRig, Touchable touchable) {
+        return GetButton(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touchable));
     }
 
     public static bool Get(AirVRCameraRig cameraRig, Button button) {
         return GetButton(cameraRig, AirVRInputDeviceName.Controller, parseControlID(button));
     }
 
-    public static bool GetDown(AirVRCameraRig cameraRig, Touch touch) {
-        return GetButtonDown(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touch));
+    public static bool GetDown(AirVRCameraRig cameraRig, Touchable touchable) {
+        return GetButtonDown(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touchable));
     }
 
     public static bool GetDown(AirVRCameraRig cameraRig, Button button) {
         return GetButtonDown(cameraRig, AirVRInputDeviceName.Controller, parseControlID(button));
     }
 
-    public static bool GetUp(AirVRCameraRig cameraRig, Touch touch) {
-        return GetButtonUp(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touch));
+    public static bool GetUp(AirVRCameraRig cameraRig, Touchable touchable) {
+        return GetButtonUp(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touchable));
     }
 
     public static bool GetUp(AirVRCameraRig cameraRig, Button button) {
         return GetButtonUp(cameraRig, AirVRInputDeviceName.Controller, parseControlID(button));
+    }
+
+    public static int GetScreenTouchCount(AirVRCameraRig cameraRig) {
+        return cameraRig.inputStream.GetTouchCount(AirVRInputDeviceName.ScreenTouch);
+    }
+
+    public static Touch GetScreenTouch(AirVRCameraRig cameraRig, int index) {
+        return cameraRig.inputStream.GetTouch(AirVRInputDeviceName.ScreenTouch, index);
     }
     
     public static bool IsDeviceFeedbackEnabled(AirVRCameraRig cameraRig, Device device) {

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,11 +11,9 @@ public class AirVRScreenTouchInputDevice : AirVRInputDevice {
     }
 
     protected override void MakeControlList() {
-        // supports up to 5 touches
-        AddControlTouch(0);
-        AddControlTouch(1);
-        AddControlTouch(2);
-        AddControlTouch(3);
-        AddControlTouch(4);
+        // supports up to 10 touches
+        foreach (byte controlID in Enumerable.Range(0, 10)) {
+            AddControlTouch(controlID);
+        }
     }
 }

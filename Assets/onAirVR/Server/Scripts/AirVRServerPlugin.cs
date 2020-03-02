@@ -12,8 +12,8 @@ using System;
 using UnityEngine;
 
 internal class AirVRServerPlugin {
-    public const string Name = "onAirVRServerPlugin";
-    public const string AudioPluginName = "AudioPlugin_onAirVRServerPlugin";
+    public const string Name = "ocs";
+    public const string AudioPluginName = "AudioPlugin_ocs";
 
     private const uint AirVRRenderEventMaskPlayerID = 0xFF000000;
     private const uint AirVRRenderEventMaskArg1 = 0x00FF0000;

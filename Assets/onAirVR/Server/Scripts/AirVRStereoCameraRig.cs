@@ -138,18 +138,20 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
 
     protected override void setupCamerasOnBound(AirVRClientConfig config) {
 #if UNITY_2018_2_OR_NEWER
+        var props = config.physicalCameraProps;
+
         leftEyeCamera.usePhysicalProperties = true;
-        leftEyeCamera.focalLength = config.cameraFocalLength;
-        leftEyeCamera.sensorSize = config.cameraSensorSize;
-        leftEyeCamera.lensShift = config.cameraLeftLensShift;
-        leftEyeCamera.aspect = config.cameraAspect;
+        leftEyeCamera.focalLength = props.focalLength;
+        leftEyeCamera.sensorSize = props.sensorSize;
+        leftEyeCamera.lensShift = props.leftLensShift;
+        leftEyeCamera.aspect = props.aspect;
         leftEyeCamera.gateFit = Camera.GateFitMode.None;
 
         rightEyeCamera.usePhysicalProperties = true;
-        rightEyeCamera.focalLength = config.cameraFocalLength;
-        rightEyeCamera.sensorSize = config.cameraSensorSize;
-        rightEyeCamera.lensShift = config.cameraRightLensShift;
-        rightEyeCamera.aspect = config.cameraAspect;
+        rightEyeCamera.focalLength = props.focalLength;
+        rightEyeCamera.sensorSize = props.sensorSize;
+        rightEyeCamera.lensShift = props.rightLensShift;
+        rightEyeCamera.aspect = props.aspect;
         rightEyeCamera.gateFit = Camera.GateFitMode.None;
 #else
         leftEyeCamera.projectionMatrix = config.GetLeftEyeCameraProjection(leftEyeCamera.nearClipPlane, leftEyeCamera.farClipPlane);
@@ -165,6 +167,10 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
     protected override void onStopRender() {
         updateTrackingModel();
         _trackingModelObject.StopTracking();
+    }
+
+    protected override void updateCameraProjection(AirVRClientConfig config, float[] projection) {
+        // do nothing; a stereoscopic camera must keep its appropriate projection
     }
 
     protected override void updateCameraTransforms(AirVRClientConfig config, Vector3 centerEyePosition, Quaternion centerEyeOrientation) {

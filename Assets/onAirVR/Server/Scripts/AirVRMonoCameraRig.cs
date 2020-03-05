@@ -53,18 +53,37 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
     }
 
     protected override void setupCamerasOnBound(AirVRClientConfig config) {
-        var projection = config.GetCameraProjection(camera.nearClipPlane, camera.farClipPlane);
+        var projection = config.GetCameraProjectionMatrix(camera.nearClipPlane, camera.farClipPlane);
         if (projection == Matrix4x4.zero) { return; }
 
 #if UNITY_2018_2_OR_NEWER
+        var props = config.physicalCameraProps;        
+
         camera.usePhysicalProperties = true;
-        camera.focalLength = config.cameraFocalLength;
-        camera.sensorSize = config.cameraSensorSize;
-        camera.lensShift = config.cameraLeftLensShift;
-        camera.aspect = config.cameraAspect;
+        camera.focalLength = props.focalLength;
+        camera.sensorSize = props.sensorSize;
+        camera.lensShift = props.lensShift;
+        camera.aspect = props.aspect;
         camera.gateFit = Camera.GateFitMode.None;
 #else
         camera.projectionMatrix = projection;
+#endif
+    }
+
+    protected override void updateCameraProjection(AirVRClientConfig config, float[] projection) {
+        var projectionMatrix = AirVRClientConfig.CalcCameraProjectionMatrix(projection, camera.nearClipPlane, camera.farClipPlane);
+
+#if UNITY_2018_2_OR_NEWER
+        var props = AirVRClientConfig.CalcPhysicalCameraProps(projection);
+
+        camera.usePhysicalProperties = true;
+        camera.focalLength = props.focalLength;
+        camera.sensorSize = props.sensorSize;
+        camera.lensShift = props.lensShift;
+        camera.aspect = props.aspect;
+        camera.gateFit = Camera.GateFitMode.None;
+#else
+        camera.projectionMatrix = projectionMatrix;
 #endif
     }
 

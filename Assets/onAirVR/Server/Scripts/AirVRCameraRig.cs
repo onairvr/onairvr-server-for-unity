@@ -180,6 +180,9 @@ public abstract class AirVRCameraRig : MonoBehaviour {
             else if (serverMessage.Name.Equals(AirVRServerMessage.NameEncodeVideoFrame)) {
                 onAirVRMediaStreamEncodeVideoFrame(serverMessage);
             }
+            else if (serverMessage.Name.Equals(AirVRServerMessage.NameSetCameraProjection)) {
+                onAirVRMediaStreamSetCameraProjection(serverMessage);
+            }
             else if (serverMessage.Name.Equals(AirVRServerMessage.NameStopped)) {
                 onAirVRMediaStreamStopped(serverMessage);
             }
@@ -216,6 +219,10 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
     private void onAirVRMediaStreamEncodeVideoFrame(AirVRServerMessage message) {
         _encodeVideoFrameRequested = true;
+    }
+
+    private void onAirVRMediaStreamSetCameraProjection(AirVRServerMessage message) {
+        updateCameraProjection(_config, message.CameraProjection);
     }
 
     private void onAirVRMediaStreamStopped(AirVRServerMessage message) {
@@ -294,6 +301,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     protected abstract void setupCamerasOnBound(AirVRClientConfig config);
     protected virtual void onStartRender() { }
     protected virtual void onStopRender() { }
+    protected abstract void updateCameraProjection(AirVRClientConfig config, float[] projection);
     protected abstract void updateCameraTransforms(AirVRClientConfig config, Vector3 centerEyePosition, Quaternion centerEyeOrientation);
     protected virtual void updateControllerTransforms(AirVRClientConfig config) { }
 

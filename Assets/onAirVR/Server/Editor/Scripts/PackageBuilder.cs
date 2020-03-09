@@ -29,8 +29,8 @@ public class PackageBuilder {
         foreach (string guid in guids) {
             assets.Add(AssetDatabase.GUIDToAssetPath(guid));
         }
-        assets.Add("Assets/Plugins/x86_64/AudioPlugin_onAirVRServerPlugin.dll");
-        assets.Add("Assets/Plugins/x86_64/onAirVRServerPlugin.dll");
+        assets.Add("Assets/Plugins/x86_64/AudioPlugin_ocs.dll");
+        assets.Add("Assets/Plugins/x86_64/ocs.dll");
         AssetDatabase.ExportPackage(assets.ToArray(), targetPath);
 
         EditorUtility.DisplayDialog("Congratulation!", "The package is exported successfully.", "Thanks.");

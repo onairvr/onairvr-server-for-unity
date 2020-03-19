@@ -12,6 +12,7 @@ using UnityEngine.Assertions;
 
 public static class AirVRInput {
     public enum Device {
+        Unknown,
         HeadTracker,
         LeftHandTracker,
         RightHandTracker,

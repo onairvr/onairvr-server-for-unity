@@ -22,6 +22,11 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
         }
     }
 
+    public Ray ScreenTouchToRay(AirVRInput.Touch touch) {
+        var viewportPos = new Vector3(touch.position.x + 0.5f, touch.position.y + 0.5f, 0.0f);
+        return camera.ViewportPointToRay(viewportPos);
+    }
+
     // implements AirVRCameraRig
     protected override void ensureGameObjectIntegrity() {
         if (_thisTransform == null) {

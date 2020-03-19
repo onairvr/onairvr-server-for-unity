@@ -60,8 +60,11 @@ public class AirVRServerInputStream : AirVRInputStream {
         if (deviceName.Equals(AirVRInputDeviceName.HeadTracker)) {
             return new AirVRHeadTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
         }
+        else if (deviceName.Equals(AirVRInputDeviceName.LeftHandTracker)) {
+            return new AirVRLeftHandTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
+        }
         else if (deviceName.Equals(AirVRInputDeviceName.RightHandTracker)) {
-            return new AirVRTrackedControllerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
+            return new AirVRRightHandTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
         }
         return null;
     }

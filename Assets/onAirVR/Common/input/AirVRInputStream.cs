@@ -49,7 +49,8 @@ public abstract class AirVRInputStream {
     private enum SendingPolicy {
         Never = 0,
         Always,
-        NonzeroAlwaysZeroOnce
+        NonzeroAlwaysZeroOnce,
+        OnChange
     }
 
     public AirVRInputStream() {
@@ -76,22 +77,21 @@ public abstract class AirVRInputStream {
 
     protected abstract void BeginPendInputImpl(ref long timestamp);
 
-    protected abstract void PendInputTouchImpl(byte deviceID, byte controlID, Vector2 position, float touch, byte policy);
     protected abstract void PendInputTransformImpl(byte deviceID, byte controlID, Vector3 position, Quaternion orientation, byte policy);
-    protected abstract void PendTrackedDeviceFeedbackImpl(byte deviceID, byte controlID, 
-                                                          Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal, byte policy); 
     protected abstract void PendInputFloat4Impl(byte deviceID, byte controlID, Vector4 value, byte policy);
     protected abstract void PendInputFloat3Impl(byte deviceID, byte controlID, Vector3 value, byte policy);
     protected abstract void PendInputFloat2Impl(byte deviceID, byte controlID, Vector2 value, byte policy);
     protected abstract void PendInputFloatImpl(byte deviceID, byte controlID, float value, byte policy);
+    protected abstract void PendInputByteImpl(byte deviceID, byte controlID, byte value, byte policy);
+    protected abstract void PendInputRaycastHitImpl(byte deviceID, byte controlID, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal, byte policy);
 
     protected abstract bool GetInputTransformImpl(byte deviceID, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation);
-    protected abstract bool GetTrackedDeviceFeedbackImpl(byte deviceID, byte controlID, 
-                                                         ref Vector3 worldRayOrigin, ref Vector3 worldHitPosition, ref Vector3 worldHitNormal);
     protected abstract bool GetInputFloat4Impl(byte deviceID, byte controlID, ref Vector4 value);
     protected abstract bool GetInputFloat3Impl(byte deviceID, byte controlID, ref Vector3 value);
     protected abstract bool GetInputFloat2Impl(byte deviceID, byte controlID, ref Vector2 value);
     protected abstract bool GetInputFloatImpl(byte deviceID, byte controlID, ref float value);
+    protected abstract bool GetInputByteImpl(byte deviceID, byte controlID, ref byte value);
+    protected abstract bool GetInputRaycastHitImpl(byte deviceID, byte controlID, ref Vector3 worldRayOrigin, ref Vector3 worldHitPosition, ref Vector3 worldHitNormal);
 
     protected abstract void SendPendingInputEventsImpl(long timestamp);
     protected abstract void ResetInputImpl();
@@ -144,7 +144,8 @@ public abstract class AirVRInputStream {
     public void PendTouch(AirVRInputSender sender, byte controlID, Vector2 position, bool touch) {
         Assert.IsTrue(sender.isRegistered);
 
-        PendInputTouchImpl((byte)sender.deviceID, controlID, position, touch ? 1.0f : 0.0f, (byte)SendingPolicy.NonzeroAlwaysZeroOnce);
+        var value = new Vector3(position.x, position.y, touch ? 1.0f : 0.0f);
+        PendInputFloat3Impl((byte)sender.deviceID, controlID, value, (byte)SendingPolicy.NonzeroAlwaysZeroOnce);
     }
 
     public void GetTouch(AirVRInputReceiver receiver, byte controlID, out Vector2 position, out float touch) {
@@ -271,19 +272,19 @@ public abstract class AirVRInputStream {
         timeStamp = ts;
     }
 
-    public void PendTrackedDeviceFeedback(AirVRInputSender sender, byte controlID, Vector3 rayOrigin, Vector3 hitPosition, Vector3 hitNormal) {
+    public void PendRaycastHit(AirVRInputSender sender, byte controlID, Vector3 rayOrigin, Vector3 hitPosition, Vector3 hitNormal) {
         Assert.IsTrue(sender.isRegistered);
 
-        PendTrackedDeviceFeedbackImpl((byte)sender.deviceID, controlID, rayOrigin, hitPosition, hitNormal, (byte)SendingPolicy.NonzeroAlwaysZeroOnce);
+        PendInputRaycastHitImpl((byte)sender.deviceID, controlID, rayOrigin, hitPosition, hitNormal, (byte)SendingPolicy.NonzeroAlwaysZeroOnce);
     }
 
-    public void GetTrackedDeviceFeedback(AirVRInputReceiver receiver, byte controlID, out Vector3 rayOrigin, out Vector3 hitPosition, out Vector3 hitNormal) {
+    public void GetRaycastHit(AirVRInputReceiver receiver, byte controlID, out Vector3 rayOrigin, out Vector3 hitPosition, out Vector3 hitNormal) {
         Vector3 resultRayOrigin = Vector3.zero;
         Vector3 resultHitPosition = Vector3.zero;
         Vector3 resultHitNormal = Vector3.zero;
 
         if (receiver.isRegistered) {
-            if (GetTrackedDeviceFeedbackImpl((byte)receiver.deviceID, controlID, ref resultRayOrigin, ref resultHitPosition, ref resultHitNormal) == false) {
+            if (GetInputRaycastHitImpl((byte)receiver.deviceID, controlID, ref resultRayOrigin, ref resultHitPosition, ref resultHitNormal) == false) {
                 resultRayOrigin = resultHitPosition = resultHitNormal = Vector3.zero;
             }
         }
@@ -291,6 +292,12 @@ public abstract class AirVRInputStream {
         rayOrigin = resultRayOrigin;
         hitPosition = resultHitPosition;
         hitNormal = resultHitNormal;
+    }
+
+    public void PendState(AirVRInputSender sender, byte controlID, byte value) {
+        Assert.IsTrue(sender.isRegistered);
+
+        PendInputByteImpl((byte)sender.deviceID, controlID, value, (byte)SendingPolicy.OnChange);
     }
 
     public void UpdateReceivers() {

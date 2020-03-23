@@ -20,10 +20,10 @@ internal class AirVRServerPlugin {
     private const uint AirVRRenderEventMaskArg2 = 0x0000FFFF;
 
     [DllImport(Name)]
-    private static extern bool onairvr_GetConfig(int playerID, out IntPtr data, out int length);
+    private static extern bool ocs_GetConfig(int playerID, out IntPtr data, out int length);
 
     [DllImport(Name)]
-    private static extern void onairvr_SetConfig(int playerID, string json);
+    private static extern void ocs_SetConfig(int playerID, string json);
 
     public static int RenderEventArg(uint playerID, uint data = 0) {
         return (int)((playerID << 24) & AirVRRenderEventMaskPlayerID) + (int)(data & (AirVRRenderEventMaskArg1 | AirVRRenderEventMaskArg2));
@@ -36,7 +36,7 @@ internal class AirVRServerPlugin {
     public static AirVRClientConfig GetConfig(int playerID) {
         IntPtr data = default(IntPtr);
         int length = 0;
-        if (onairvr_GetConfig(playerID, out data, out length)) {
+        if (ocs_GetConfig(playerID, out data, out length)) {
             byte[] array = new byte[length];
             Marshal.Copy(data, array, 0, length);
             return JsonUtility.FromJson<AirVRClientConfig>(System.Text.Encoding.UTF8.GetString(array, 0, length)); 
@@ -45,6 +45,6 @@ internal class AirVRServerPlugin {
     }
 
     public static void SetConfig(int playerID, AirVRClientConfig config) {
-        onairvr_SetConfig(playerID, JsonUtility.ToJson(config));
+        ocs_SetConfig(playerID, JsonUtility.ToJson(config));
     }
 }

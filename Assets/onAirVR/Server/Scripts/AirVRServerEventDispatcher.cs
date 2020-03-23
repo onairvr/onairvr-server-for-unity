@@ -13,20 +13,20 @@ using System.Runtime.InteropServices;
 
 public class AirVRServerEventDispatcher : AirVREventDispatcher {
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_CheckMessageQueue(out IntPtr source, out IntPtr data, out int length);
+    private static extern bool ocs_CheckMessageQueue(out IntPtr source, out IntPtr data, out int length);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_RemoveFirstMessage();
+    private static extern void ocs_RemoveFirstMessage();
 
     protected override AirVRMessage ParseMessageImpl(IntPtr source, string message) {
         return AirVRServerMessage.Parse(source, message);
     }
 
     protected override bool CheckMessageQueueImpl(out IntPtr source, out IntPtr data, out int length) {
-        return onairvr_CheckMessageQueue(out source, out data, out length);
+        return ocs_CheckMessageQueue(out source, out data, out length);
     }
 
     protected override void RemoveFirstMessageFromQueueImpl() {
-        onairvr_RemoveFirstMessage();
+        ocs_RemoveFirstMessage();
     }
 }

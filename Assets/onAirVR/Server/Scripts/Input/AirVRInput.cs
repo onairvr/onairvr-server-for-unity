@@ -361,21 +361,13 @@ public static class AirVRInput {
     public static Touch GetScreenTouch(AirVRCameraRig cameraRig, int index) {
         return cameraRig.inputStream.GetTouch(AirVRInputDeviceName.ScreenTouch, index);
     }
+
+    public static void RequestVibration(AirVRCameraRig cameraRig, Device device, AirVRHapticVibration vibration) {
+        cameraRig.inputStream.RequestVibrate(deviceName(device), vibration);
+    }
     
     public static bool IsDeviceFeedbackEnabled(AirVRCameraRig cameraRig, Device device) {
         return cameraRig.inputStream.IsDeviceFeedbackEnabled(deviceName(device));
-    }
-
-    public static void EnableTrackedDeviceFeedback(AirVRCameraRig cameraRig, Device device, Texture2D cookieTexture, float depthScaleMultiplier) {
-        if (isTrackedDevice(device) == false) {
-            return;
-        }
-        
-        cameraRig.inputStream.EnableTrackedDeviceFeedback(deviceName(device), cookieTexture, depthScaleMultiplier);
-    }
-
-    public static void DisableDeviceFeedback(AirVRCameraRig cameraRig, Device device) {
-        cameraRig.inputStream.DisableDeviceFeedback(deviceName(device));
     }
 
     public static void GetTrackedDevicePositionAndOrientation(AirVRCameraRig cameraRig, Device device, out Vector3 worldPosition, out Quaternion worldOrientation) {
@@ -394,14 +386,15 @@ public static class AirVRInput {
         worldOrientation = rot;
     }
 
-    public static void FeedbackTrackedDevice(AirVRCameraRig cameraRig, Device device, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal) {
+    public static void UpdateRaycastHitResult(AirVRCameraRig cameraRig, Device device, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal) {
         if (isTrackedDevice(device) == false) {
             return;
         }
 
-        cameraRig.inputStream.FeedbackTrackedDevice(deviceName(device), feedbackRaycastHitResultControlID(device),
-                                                    cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(worldRayOrigin),
-                                                    cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(worldHitPosition),
-                                                    cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyVector(worldHitNormal));
+        cameraRig.inputStream.PendRaycastHitResult(deviceName(device), 
+                                                   feedbackRaycastHitResultControlID(device),
+                                                   cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(worldRayOrigin),
+                                                   cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(worldHitPosition),
+                                                   cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyVector(worldHitNormal));
     }
 }

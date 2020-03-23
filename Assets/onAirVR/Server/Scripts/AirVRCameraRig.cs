@@ -18,40 +18,40 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     private const int InvalidPlayerID = -1;
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_GetViewNumber(int playerID, double timeStamp, float orientationX, float orientationY, float orientationZ, float orientationW, out int viewNumber);
+    private static extern void ocs_GetViewNumber(int playerID, double timeStamp, float orientationX, float orientationY, float orientationZ, float orientationW, out int viewNumber);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern IntPtr onairvr_InitStreams_RenderThread_Func();
+    private static extern IntPtr ocs_InitStreams_RenderThread_Func();
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern IntPtr onairvr_EncodeVideoFrame_RenderThread_Func();
+    private static extern IntPtr ocs_EncodeVideoFrame_RenderThread_Func();
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern IntPtr onairvr_ResetStreams_RenderThread_Func();
+    private static extern IntPtr ocs_ResetStreams_RenderThread_Func();
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern IntPtr onairvr_CleanupStreams_RenderThread_Func();
+    private static extern IntPtr ocs_CleanupStreams_RenderThread_Func();
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_IsStreaming(int playerID);
+    private static extern bool ocs_IsStreaming(int playerID);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern IntPtr onairvr_AdjustBitRate_RenderThread_Func();
+    private static extern IntPtr ocs_AdjustBitRate_RenderThread_Func();
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_RecenterPose(int playerID);
+    private static extern void ocs_RecenterPose(int playerID);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_EnableNetworkTimeWarp(int playerID, bool enable);
+    private static extern void ocs_EnableNetworkTimeWarp(int playerID, bool enable);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_SendCameraClipPlanes(int playerID, float nearClip, float farClip);
+    private static extern void ocs_SendCameraClipPlanes(int playerID, float nearClip, float farClip);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_SendUserData(int playerID, IntPtr data, int length);
+    private static extern void ocs_SendUserData(int playerID, IntPtr data, int length);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_Disconnect(int playerID);
+    private static extern void ocs_Disconnect(int playerID);
 
     private Vector3 _cameraPosition = Vector3.zero;
     private Quaternion _cameraOrientation = Quaternion.identity;
@@ -143,7 +143,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
             double timeStamp = 0.0;
             inputStream.GetTransform(AirVRInputDeviceName.HeadTracker, (byte)AirVRHeadTrackerKey.Transform, ref timeStamp, ref _cameraPosition, ref _cameraOrientation);
 
-            onairvr_GetViewNumber(playerID, timeStamp, _cameraOrientation.x, _cameraOrientation.y, _cameraOrientation.z, _cameraOrientation.w, out _viewNumber);
+            ocs_GetViewNumber(playerID, timeStamp, _cameraOrientation.x, _cameraOrientation.y, _cameraOrientation.z, _cameraOrientation.w, out _viewNumber);
             updateCameraTransforms(_config, _cameraPosition, _cameraOrientation);
             updateControllerTransforms(_config);
 
@@ -204,10 +204,10 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         Assert.IsNull(mediaStream);
 
         initializeCamerasForMediaStream();
-        onairvr_SendCameraClipPlanes(playerID, cameras[0].nearClipPlane, cameras[0].farClipPlane);
+        ocs_SendCameraClipPlanes(playerID, cameras[0].nearClipPlane, cameras[0].farClipPlane);
 
         mediaStream = new AirVRServerMediaStream(playerID, _config, cameras.Length);
-        GL.IssuePluginEvent(onairvr_InitStreams_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID));
+        GL.IssuePluginEvent(ocs_InitStreams_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID));
 
         inputStream.Init();
     }
@@ -232,7 +232,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         _mediaStreamJustStopped = true; // StopCoroutine(_CallPluginEndOfFrame) executes the routine one more in the next frame after the call. 
                                         // so use a flag to completely stop the routine.
 
-        GL.IssuePluginEvent(onairvr_ResetStreams_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID));
+        GL.IssuePluginEvent(ocs_ResetStreams_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID));
 
         inputStream.Stop();
     }
@@ -243,7 +243,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
         inputStream.Cleanup();
 
-        GL.IssuePluginEvent(onairvr_CleanupStreams_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID));
+        GL.IssuePluginEvent(ocs_CleanupStreams_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID));
 
         mediaStream.Destroy();
         mediaStream = null;
@@ -267,7 +267,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         yield return new WaitForEndOfFrame();
 
         Assert.IsNotNull(mediaStream);
-        GL.IssuePluginEvent(onairvr_EncodeVideoFrame_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, (uint)_viewNumber, (uint)mediaStream.currentFramebufferIndex));    // the first render event
+        GL.IssuePluginEvent(ocs_EncodeVideoFrame_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, (uint)_viewNumber, (uint)mediaStream.currentFramebufferIndex));    // the first render event
 
         while (_mediaStreamJustStopped == false) {
             yield return new WaitForEndOfFrame();
@@ -278,7 +278,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
             else if (_encodeVideoFrameRequested) {
                 Assert.IsNotNull(mediaStream);
 
-                GL.IssuePluginEvent(onairvr_EncodeVideoFrame_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, (uint)_viewNumber, (uint)mediaStream.currentFramebufferIndex));
+                GL.IssuePluginEvent(ocs_EncodeVideoFrame_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, (uint)_viewNumber, (uint)mediaStream.currentFramebufferIndex));
                 _encodeVideoFrameRequested = false;
             }
         }
@@ -312,7 +312,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
     internal bool isStreaming {
         get {
-            return onairvr_IsStreaming(playerID);
+            return ocs_IsStreaming(playerID);
         }
     }
 
@@ -355,7 +355,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     internal void PreHandOverStreams() {
         Assert.IsTrue(isBoundToClient);
 
-        inputStream.DisableAllDeviceFeedbacks();
+        inputStream.DisableAllRaycastHitFeedbacks();
     }
 
     internal void PostHandOverStreams() {
@@ -366,7 +366,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
     internal void EnableNetworkTimeWarp(bool enable) {
         if (isBoundToClient) {
-            onairvr_EnableNetworkTimeWarp(playerID, enable);
+            ocs_EnableNetworkTimeWarp(playerID, enable);
         }
     }
 
@@ -391,13 +391,13 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
     public void AdjustBitrate(uint bitrateInKbps) {
         if (isBoundToClient) {
-            GL.IssuePluginEvent(onairvr_AdjustBitRate_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, bitrateInKbps));
+            GL.IssuePluginEvent(ocs_AdjustBitRate_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, bitrateInKbps));
         }
     }
 
     public void RecenterPose() {
         if (isBoundToClient) {
-            onairvr_RecenterPose(playerID);
+            ocs_RecenterPose(playerID);
         }
     }
 
@@ -407,7 +407,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
             try {
                 Marshal.Copy(data, 0, ptr, data.Length);
-                onairvr_SendUserData(playerID, ptr, data.Length);
+                ocs_SendUserData(playerID, ptr, data.Length);
             }
             finally {
                 Marshal.FreeHGlobal(ptr);
@@ -417,7 +417,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
     public void Disconnect() {
         if (isBoundToClient) {
-            onairvr_Disconnect(playerID);
+            ocs_Disconnect(playerID);
         }
     }
 }

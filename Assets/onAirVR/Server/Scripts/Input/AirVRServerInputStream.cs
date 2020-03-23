@@ -14,79 +14,56 @@ using UnityEngine.Assertions;
 
 public class AirVRServerInputStream : AirVRInputStream {
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern byte onairvr_RegisterTrackedDeviceFeedbackAsInputSender(int playerID, string name, IntPtr cookieTexture, int cookieTextureSize, float cookieDepthScaleMultiplier);
+    private static extern byte ocs_RegisterInputDeviceFeedback(int playerID, string name, IntPtr cookieTexture, int cookieTextureSize = 0, float cookieDepthScaleMultiplier = 0);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_UnregisterInputSender(int playerID, byte id);
+    private static extern void ocs_UnregisterInputSender(int playerID, byte id);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_BeginPendInput(int playerID, ref long timestamp);
-    [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_PendTrackedDeviceFeedback(int playerID, byte deviceID, byte controlID,
-                                                                 float worldRayOriginX, float worldRayOriginY, float worldRayOriginZ,
-                                                                 float worldHitPositionX, float worldHitPositionY, float worldHitPositionZ,
-                                                                 float worldHitNormalX, float worldHitNormalY, float worldHitNormalZ, byte policy);
+    private static extern void ocs_BeginPendInput(int playerID, ref long timestamp);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_GetInputTransformWithTimeStamp(int playerID, byte deviceID, byte controlID, ref double timeStamp,
-                                                                      ref float posX, ref float posY, ref float posZ, 
-                                                                      ref float rotX, ref float rotY, ref float rotZ, ref float retW);
+    private static extern void ocs_PendInputRaycastHit(int playerID, byte deviceID, byte controlID,
+                                                       float worldRayOriginX, float worldRayOriginY, float worldRayOriginZ,
+                                                       float worldHitPositionX, float worldHitPositionY, float worldHitPositionZ,
+                                                       float worldHitNormalX, float worldHitNormalY, float worldHitNormalZ, byte policy);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_GetInputFloat4(int playerID, byte deviceID, byte controlID, ref float x, ref float y, ref float z, ref float w);
+    private static extern void ocs_PendInputByte(int playerID, byte deviceID, byte controlID, byte value, byte policy);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_GetInputFloat3(int playerID, byte deviceID, byte controlID, ref float x, ref float y, ref float z);
+    private static extern bool ocs_GetInputTransformWithTimeStamp(int playerID, byte deviceID, byte controlID, ref double timeStamp,
+                                                                  ref float posX, ref float posY, ref float posZ, 
+                                                                  ref float rotX, ref float rotY, ref float rotZ, ref float retW);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_GetInputFloat2(int playerID, byte deviceID, byte controlID, ref float x, ref float y);
+    private static extern bool ocs_GetInputFloat4(int playerID, byte deviceID, byte controlID, ref float x, ref float y, ref float z, ref float w);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool onairvr_GetInputFloat(int playerID, byte deviceID, byte controlID, ref float value);
+    private static extern bool ocs_GetInputFloat3(int playerID, byte deviceID, byte controlID, ref float x, ref float y, ref float z);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_SendPendingInputs(int playerID, long timestamp);
+    private static extern bool ocs_GetInputFloat2(int playerID, byte deviceID, byte controlID, ref float x, ref float y);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_ResetInput(int playerID);
+    private static extern bool ocs_GetInputFloat(int playerID, byte deviceID, byte controlID, ref float value);
+
+    [DllImport(AirVRServerPlugin.Name)]
+    private static extern void ocs_SendPendingInputs(int playerID, long timestamp);
+
+    [DllImport(AirVRServerPlugin.Name)]
+    private static extern void ocs_ResetInput(int playerID);
 
     public AirVRCameraRig owner { get; set; }
-
-    private void addDeviceFeedback(AirVRDeviceFeedback feedback) {
-        senders.Add(feedback.name, feedback);
-    }
-
-    private AirVRTrackedDeviceFeedback createTrackedDeviceFeedback(string deviceName, Texture2D cookieTexture, float cookieDepthScaleMultiplier) {
-        if (deviceName.Equals(AirVRInputDeviceName.HeadTracker)) {
-            return new AirVRHeadTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
-        }
-        else if (deviceName.Equals(AirVRInputDeviceName.LeftHandTracker)) {
-            return new AirVRLeftHandTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
-        }
-        else if (deviceName.Equals(AirVRInputDeviceName.RightHandTracker)) {
-            return new AirVRRightHandTrackerDeviceFeedback(cookieTexture, cookieDepthScaleMultiplier);
-        }
-        return null;
-    }
-
-    private void registerTrackedDeviceFeedback(AirVRTrackedDeviceFeedback feedback) {
-        int cookieTextureSize = Marshal.SizeOf(feedback.cookieTexture[0]) * feedback.cookieTexture.Length;
-        IntPtr ptr = Marshal.AllocHGlobal(cookieTextureSize);
-
-        Marshal.Copy(feedback.cookieTexture, 0, ptr, feedback.cookieTexture.Length);
-        feedback.OnRegistered(onairvr_RegisterTrackedDeviceFeedbackAsInputSender(owner.playerID, feedback.name, ptr, cookieTextureSize, feedback.cookieDepthScaleMultiplier));
-
-        Marshal.FreeHGlobal(ptr);
-    }
 
     public override void Init() {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
 
         foreach (var key in senders.Keys) {
-            AirVRTrackedDeviceFeedback feedback = senders[key] as AirVRTrackedDeviceFeedback;
+            var feedback = senders[key] as AirVRInputDeviceFeedback;
             Assert.IsNotNull(feedback);
 
-            registerTrackedDeviceFeedback(feedback);
+            registerInputDeviceFeedback(feedback);
         }
 
         base.Init();
@@ -94,6 +71,10 @@ public class AirVRServerInputStream : AirVRInputStream {
 
     public void AddInputDevice(AirVRInputDevice device) {
         receivers.Add(device.name, device);
+    }
+
+    public void AddInputDeviceFeedback(AirVRInputDeviceFeedback feedback) {
+        senders.Add(feedback.name, feedback);
     }
 
     public bool GetTransform(string deviceName, byte controlID, ref Vector3 position, ref Quaternion orientation) {
@@ -173,6 +154,15 @@ public class AirVRServerInputStream : AirVRInputStream {
         return null;
     }
 
+    public void RequestVibrate(string deviceName, AirVRHapticVibration vibration) {
+        if (senders.ContainsKey(deviceName) == false) { return; }
+
+        var feedback = senders[deviceName] as AirVRInputDeviceFeedback;
+        if (feedback != null) {
+            feedback.PendVibrate(vibration);
+        }
+    }
+
     public bool CheckIfInputDeviceAvailable(string deviceName) {
         return receivers.ContainsKey(deviceName) && receivers[deviceName].isRegistered;
     }
@@ -181,50 +171,39 @@ public class AirVRServerInputStream : AirVRInputStream {
         return senders.ContainsKey(deviceName) && senders[deviceName].isRegistered;
     }
 
-    public void EnableTrackedDeviceFeedback(string deviceName, Texture2D cookieTexture, float cookieDepthScaleMultiplier) {
-        if (senders.ContainsKey(deviceName) == false) {
-            AirVRTrackedDeviceFeedback feedback = createTrackedDeviceFeedback(deviceName, cookieTexture, cookieDepthScaleMultiplier);
-            if (feedback != null) {
-                addDeviceFeedback(feedback);
-                if (owner != null && owner.isBoundToClient) {
-                    registerTrackedDeviceFeedback(feedback);
-                }
-            }
+    public void EnableRaycastHit(string deviceName) {
+        if (senders.ContainsKey(deviceName) == false) { return; }
+
+        var feedback = senders[deviceName] as AirVRInputDeviceFeedback;
+        if (feedback != null) {
+            feedback.EnableRaycastHit(true);
         }
     }
 
-    public void DisableDeviceFeedback(string deviceName) {
-        if (senders.ContainsKey(deviceName)) {
-            AirVRDeviceFeedback feedback = senders[deviceName] as AirVRDeviceFeedback;
-            Assert.IsNotNull(feedback);
+    public void DisableRaycastHit(string deviceName) {
+        if (senders.ContainsKey(deviceName) == false) { return; }
 
-            if (owner != null && owner.isBoundToClient && feedback.isRegistered) {
-                onairvr_UnregisterInputSender(owner.playerID, (byte)feedback.deviceID);
-                feedback.OnUnregistered();
-            }
-            senders.Remove(deviceName);
+        var feedback = senders[deviceName] as AirVRInputDeviceFeedback;
+        if (feedback != null) {
+            feedback.EnableRaycastHit(false);
         }
     }
 
-    public void DisableAllDeviceFeedbacks() {
-        foreach (var key in senders.Keys) {
-            AirVRDeviceFeedback feedback = senders[key] as AirVRDeviceFeedback;
-            Assert.IsNotNull(feedback);
+    public void DisableAllRaycastHitFeedbacks() {
+        foreach (var device in senders.Values) {
+            var feedback = device as AirVRInputDeviceFeedback;
+            if (feedback == null) { continue; }
 
-            if (owner != null && owner.isBoundToClient && feedback.isRegistered) {
-                onairvr_UnregisterInputSender(owner.playerID, (byte)feedback.deviceID);
-                feedback.OnUnregistered();
-            }
+            feedback.EnableRaycastHit(false);
         }
-        senders.Clear();
     }
 
-    public void FeedbackTrackedDevice(string deviceName, byte controlID, Vector3 rayOrigin, Vector3 hitPosition, Vector3 hitNormal) {
-        if (senders.ContainsKey(deviceName)) {
-            AirVRTrackedDeviceFeedback feedback = senders[deviceName] as AirVRTrackedDeviceFeedback;
-            Assert.IsNotNull(feedback);
+    public void PendRaycastHitResult(string deviceName, byte controlID, Vector3 rayOrigin, Vector3 hitPosition, Vector3 hitNormal) {
+        if (senders.ContainsKey(deviceName) == false) { return; }
 
-            feedback.SetRaycastResult(rayOrigin, hitPosition, hitNormal);
+        var feedback = senders[deviceName] as AirVRInputDeviceFeedback;
+        if (feedback != null) {
+            feedback.PendRaycastHitResult(rayOrigin, hitPosition, hitNormal);
         }
     }
 
@@ -238,28 +217,24 @@ public class AirVRServerInputStream : AirVRInputStream {
     protected override void BeginPendInputImpl(ref long timestamp) {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
 
-        onairvr_BeginPendInput(owner.playerID, ref timestamp);
+        ocs_BeginPendInput(owner.playerID, ref timestamp);
     }
 
     protected override void UnregisterInputSenderImpl(byte id) {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
 
-        onairvr_UnregisterInputSender(owner.playerID, id);
-    }
-
-    protected override void PendInputTouchImpl(byte deviceID, byte controlID, Vector2 position, float touch, byte policy) {
-        Assert.IsTrue(false);
+        ocs_UnregisterInputSender(owner.playerID, id);
     }
 
     protected override void PendInputTransformImpl(byte deviceID, byte controlID, Vector3 position, Quaternion orientation, byte policy) {
         Assert.IsTrue(false);
     }
 
-    protected override void PendTrackedDeviceFeedbackImpl(byte deviceID, byte controlID, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal, byte policy) {
+    protected override void PendInputRaycastHitImpl(byte deviceID, byte controlID, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal, byte policy) {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
 
-        onairvr_PendTrackedDeviceFeedback(owner.playerID, deviceID, controlID, worldRayOrigin.x, worldRayOrigin.y, worldRayOrigin.z,
-                                          worldHitPosition.x, worldHitPosition.y, worldHitPosition.z, worldHitNormal.x, worldHitNormal.y, worldHitNormal.z, policy);
+        ocs_PendInputRaycastHit(owner.playerID, deviceID, controlID, worldRayOrigin.x, worldRayOrigin.y, worldRayOrigin.z,
+                                worldHitPosition.x, worldHitPosition.y, worldHitPosition.z, worldHitNormal.x, worldHitNormal.y, worldHitNormal.z, policy);
     }
 
     protected override void PendInputFloat4Impl(byte deviceID, byte controlID, Vector4 value, byte policy) {
@@ -278,43 +253,64 @@ public class AirVRServerInputStream : AirVRInputStream {
         Assert.IsTrue(false);
     }
 
-    protected override bool GetInputTransformImpl(byte deviceID, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation) {
-        Assert.IsNotNull(owner);
-        return onairvr_GetInputTransformWithTimeStamp(owner.playerID, deviceID, controlID, ref timeStamp, ref position.x, ref position.y, ref position.z, ref orientation.x, ref orientation.y, ref orientation.z, ref orientation.w);
+    protected override void PendInputByteImpl(byte deviceID, byte controlID, byte value, byte policy) {
+        Assert.IsTrue(owner != null && owner.isBoundToClient);
+
+        ocs_PendInputByte(owner.playerID, deviceID, controlID, value, policy);
     }
 
-    protected override bool GetTrackedDeviceFeedbackImpl(byte deviceID, byte controlID, ref Vector3 worldRayOrigin, ref Vector3 worldHitPosition, ref Vector3 worldHitNormal) {
+    protected override bool GetInputTransformImpl(byte deviceID, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation) {
+        Assert.IsNotNull(owner);
+        return ocs_GetInputTransformWithTimeStamp(owner.playerID, deviceID, controlID, ref timeStamp, ref position.x, ref position.y, ref position.z, ref orientation.x, ref orientation.y, ref orientation.z, ref orientation.w);
+    }
+
+    protected override bool GetInputRaycastHitImpl(byte deviceID, byte controlID, ref Vector3 worldRayOrigin, ref Vector3 worldHitPosition, ref Vector3 worldHitNormal) {
         Assert.IsTrue(false);
         return false;
     }
 
     protected override bool GetInputFloat4Impl(byte deviceID, byte controlID, ref Vector4 value) {
         Assert.IsNotNull(owner);
-        return onairvr_GetInputFloat4(owner.playerID, deviceID, controlID, ref value.x, ref value.y, ref value.z, ref value.w);
+        return ocs_GetInputFloat4(owner.playerID, deviceID, controlID, ref value.x, ref value.y, ref value.z, ref value.w);
     }
 
     protected override bool GetInputFloat3Impl(byte deviceID, byte controlID, ref Vector3 value) {
         Assert.IsNotNull(owner);
-        return onairvr_GetInputFloat3(owner.playerID, deviceID, controlID, ref value.x, ref value.y, ref value.z);
+        return ocs_GetInputFloat3(owner.playerID, deviceID, controlID, ref value.x, ref value.y, ref value.z);
     }
 
     protected override bool GetInputFloat2Impl(byte deviceID, byte controlID, ref Vector2 value) {
         Assert.IsNotNull(owner);
-        return onairvr_GetInputFloat2(owner.playerID, deviceID, controlID, ref value.x, ref value.y);
+        return ocs_GetInputFloat2(owner.playerID, deviceID, controlID, ref value.x, ref value.y);
     }
 
     protected override bool GetInputFloatImpl(byte deviceID, byte controlID, ref float value) {
         Assert.IsNotNull(owner);
-        return onairvr_GetInputFloat(owner.playerID, deviceID, controlID, ref value);
+        return ocs_GetInputFloat(owner.playerID, deviceID, controlID, ref value);
+    }
+
+    protected override bool GetInputByteImpl(byte deviceID, byte controlID, ref byte value) {
+        Assert.IsTrue(false);
+        return false;
     }
 
     protected override void SendPendingInputEventsImpl(long timestamp) {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
-        onairvr_SendPendingInputs(owner.playerID, timestamp);
+        ocs_SendPendingInputs(owner.playerID, timestamp);
     }
 
     protected override void ResetInputImpl() {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
-        onairvr_ResetInput(owner.playerID);
+        ocs_ResetInput(owner.playerID);
+    }
+
+    private void registerInputDeviceFeedback(AirVRInputDeviceFeedback feedback) {
+        int cookieTextureSize = Marshal.SizeOf(feedback.cookieTexture[0]) * feedback.cookieTexture.Length;
+        IntPtr ptr = Marshal.AllocHGlobal(cookieTextureSize);
+
+        Marshal.Copy(feedback.cookieTexture, 0, ptr, feedback.cookieTexture.Length);
+        feedback.OnRegistered(ocs_RegisterInputDeviceFeedback(owner.playerID, feedback.name, ptr, cookieTextureSize, feedback.cookieDepthScaleMultiplier));
+
+        Marshal.FreeHGlobal(ptr);
     }
 }

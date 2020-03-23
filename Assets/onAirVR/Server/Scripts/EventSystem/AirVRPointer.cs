@@ -7,18 +7,16 @@
 
  ***********************************************************/
 
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Networking;
 
 public class AirVRPointer : MonoBehaviour {
     public static List<AirVRPointer> pointers = new List<AirVRPointer>();
 
     private AirVRStereoCameraRig _cameraRig = null;
     private AirVRInput.Device _inputDevice = AirVRInput.Device.Unknown;
+    private AirVRTrackerDeviceFeedback _deviceFeedback;
 
     [SerializeField] private bool _renderOnClient = false;
     [SerializeField] private Texture2D _cookie;
@@ -43,19 +41,40 @@ public class AirVRPointer : MonoBehaviour {
         }
     }
 
-    protected virtual void Update() {
-        if (_renderOnClient == false) { return; }
+    private void Start() {
+        switch (_inputDevice) {
+            case AirVRInput.Device.LeftHandTracker:
+                _deviceFeedback = new AirVRLeftHandTrackerDeviceFeedback(_cookie, _depthScaleMultiplier);
+                break;
+            case AirVRInput.Device.RightHandTracker:
+                _deviceFeedback = new AirVRRightHandTrackerDeviceFeedback(_cookie, _depthScaleMultiplier);
+                break;
+            default:
+                return;
+        }
 
-        if (AirVRInput.IsDeviceAvailable(_cameraRig, _inputDevice) && AirVRInput.IsDeviceFeedbackEnabled(_cameraRig, _inputDevice) == false && _cookie != null) {
-            AirVRInput.EnableTrackedDeviceFeedback(_cameraRig, _inputDevice, _cookie, _depthScaleMultiplier);
+        _cameraRig.inputStream.AddInputDeviceFeedback(_deviceFeedback);
+    }
+
+    protected virtual void Update() {
+        if (AirVRInput.IsDeviceAvailable(_cameraRig, _inputDevice) == false) { return; }
+
+        if (_renderOnClient && _deviceFeedback.renderOnClient == false) {
+            _deviceFeedback.renderOnClient = true;
+            _deviceFeedback.EnableRaycastHit(true);
+        }
+        else if (_renderOnClient == false && _deviceFeedback.renderOnClient) {
+            _deviceFeedback.renderOnClient = false;
+            _deviceFeedback.EnableRaycastHit(false);
         }
     }
 
     private void OnDisable() {
-        if (_renderOnClient == false) { return; }
+        if (AirVRInput.IsDeviceAvailable(_cameraRig, _inputDevice) == false) { return; }
 
-        if (AirVRInput.IsDeviceFeedbackEnabled(_cameraRig, _inputDevice)) {
-            AirVRInput.DisableDeviceFeedback(_cameraRig, _inputDevice);
+        if (_deviceFeedback.renderOnClient) {
+            _deviceFeedback.renderOnClient = false;
+            _deviceFeedback.EnableRaycastHit(false);
         }
     }
 
@@ -125,10 +144,10 @@ public class AirVRPointer : MonoBehaviour {
         if (_renderOnClient == false) { return; }
 
         if (raycastResult.isValid) {
-            AirVRInput.FeedbackTrackedDevice(_cameraRig, _inputDevice, ray.origin, raycastResult.worldPosition, raycastResult.worldNormal);
+            AirVRInput.UpdateRaycastHitResult(_cameraRig, _inputDevice, ray.origin, raycastResult.worldPosition, raycastResult.worldNormal);
         }
         else {
-            AirVRInput.FeedbackTrackedDevice(_cameraRig, _inputDevice, Vector3.zero, Vector3.zero, Vector3.zero);
+            AirVRInput.UpdateRaycastHitResult(_cameraRig, _inputDevice, Vector3.zero, Vector3.zero, Vector3.zero);
         }
     }
 }

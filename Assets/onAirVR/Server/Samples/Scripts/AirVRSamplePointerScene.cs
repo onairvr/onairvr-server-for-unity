@@ -45,9 +45,11 @@ public class AirVRSamplePointerScene : MonoBehaviour {
 
     private IEnumerator Start() {
         _button.onClick.AddListener(() => {
-            AirVRInput.RequestVibration(_stereoCameraRig, AirVRInput.Device.RightHandTracker, AirVRHapticVibration.OneTime_Short);
             _remainingToStopIndicating = IndicatorDuration;
             _indicator.gameObject.SetActive(true);
+
+            AirVRInput.RequestVibration(_stereoCameraRig, AirVRInput.Device.LeftHandTracker, AirVRHapticVibration.OneTime_Short);
+            AirVRInput.RequestVibration(_stereoCameraRig, AirVRInput.Device.RightHandTracker, AirVRHapticVibration.OneTime_Short);
         });
 
         yield return StartCoroutine(AirVRCameraFade.FadeAllCameras(this, true, 0.5f));

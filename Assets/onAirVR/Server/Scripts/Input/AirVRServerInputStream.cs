@@ -20,6 +20,9 @@ public class AirVRServerInputStream : AirVRInputStream {
     private static extern void ocs_UnregisterInputSender(int playerID, byte id);
 
     [DllImport(AirVRServerPlugin.Name)]
+    private static extern long ocs_GetInputRecvTimestamp(int playerID);
+
+    [DllImport(AirVRServerPlugin.Name)]
     private static extern void ocs_BeginPendInput(int playerID, ref long timestamp);
 
     [DllImport(AirVRServerPlugin.Name)]
@@ -32,9 +35,9 @@ public class AirVRServerInputStream : AirVRInputStream {
     private static extern void ocs_PendInputByte(int playerID, byte deviceID, byte controlID, byte value, byte policy);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern bool ocs_GetInputTransformWithTimeStamp(int playerID, byte deviceID, byte controlID, ref double timeStamp,
-                                                                  ref float posX, ref float posY, ref float posZ, 
-                                                                  ref float rotX, ref float rotY, ref float rotZ, ref float retW);
+    private static extern bool ocs_GetInputTransform(int playerID, byte deviceID, byte controlID,
+                                                     ref float posX, ref float posY, ref float posZ, 
+                                                     ref float rotX, ref float rotY, ref float rotZ, ref float retW);
 
     [DllImport(AirVRServerPlugin.Name)]
     private static extern bool ocs_GetInputFloat4(int playerID, byte deviceID, byte controlID, ref float x, ref float y, ref float z, ref float w);
@@ -80,13 +83,6 @@ public class AirVRServerInputStream : AirVRInputStream {
     public bool GetTransform(string deviceName, byte controlID, ref Vector3 position, ref Quaternion orientation) {
         if (receivers.ContainsKey(deviceName)) {
             return (receivers[deviceName] as AirVRInputDevice).GetTransform(controlID, ref position, ref orientation);
-        }
-        return false;
-    }
-
-    public bool GetTransform(string deviceName, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation) {
-        if (receivers.ContainsKey(deviceName)) {
-            return (receivers[deviceName] as AirVRInputDevice).GetTransform(controlID, ref timeStamp, ref position, ref orientation);
         }
         return false;
     }
@@ -214,6 +210,11 @@ public class AirVRServerInputStream : AirVRInputStream {
         }
     }
 
+    protected override long GetInputRecvTimestampImpl() {
+        Assert.IsNotNull(owner);
+        return ocs_GetInputRecvTimestamp(owner.playerID);
+    }
+
     protected override void BeginPendInputImpl(ref long timestamp) {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
 
@@ -259,9 +260,9 @@ public class AirVRServerInputStream : AirVRInputStream {
         ocs_PendInputByte(owner.playerID, deviceID, controlID, value, policy);
     }
 
-    protected override bool GetInputTransformImpl(byte deviceID, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation) {
+    protected override bool GetInputTransformImpl(byte deviceID, byte controlID, ref Vector3 position, ref Quaternion orientation) {
         Assert.IsNotNull(owner);
-        return ocs_GetInputTransformWithTimeStamp(owner.playerID, deviceID, controlID, ref timeStamp, ref position.x, ref position.y, ref position.z, ref orientation.x, ref orientation.y, ref orientation.z, ref orientation.w);
+        return ocs_GetInputTransform(owner.playerID, deviceID, controlID, ref position.x, ref position.y, ref position.z, ref orientation.x, ref orientation.y, ref orientation.z, ref orientation.w);
     }
 
     protected override bool GetInputRaycastHitImpl(byte deviceID, byte controlID, ref Vector3 worldRayOrigin, ref Vector3 worldHitPosition, ref Vector3 worldHitNormal) {

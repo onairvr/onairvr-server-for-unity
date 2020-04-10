@@ -76,15 +76,8 @@ public abstract class AirVRInputDevice : AirVRInputReceiver {
     }
 
     private class Xform : Control {
-        private double _timeStamp;
         private Vector3 _position;
         private Quaternion _orientation;
-
-        public double timeStamp {
-            get {
-                return _timeStamp;
-            }
-        }
 
         public Vector3 position {
             get {
@@ -99,7 +92,7 @@ public abstract class AirVRInputDevice : AirVRInputReceiver {
         }
 
         public override void PollInput(AirVRInputDevice device, AirVRInputStream inputStream, byte id) {
-            inputStream.GetTransform(device, id, out _timeStamp, out _position, out _orientation);
+            inputStream.GetTransform(device, id, out _position, out _orientation);
         }
     }
 
@@ -203,17 +196,6 @@ public abstract class AirVRInputDevice : AirVRInputReceiver {
         if (control != null) {
             position = (control as Xform).position;
             orientation = (control as Xform).orientation;
-            return true;
-        }
-        return false;
-    }
-
-    public bool GetTransform(byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation) {
-        Control control = findControl(controlID);
-        if (control != null) {
-            position = (control as Xform).position;
-            orientation = (control as Xform).orientation;
-            timeStamp = (control as Xform).timeStamp;
             return true;
         }
         return false;

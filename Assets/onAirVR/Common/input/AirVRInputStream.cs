@@ -75,6 +75,7 @@ public abstract class AirVRInputStream {
     protected abstract float maxSendingRatePerSec { get; }
     protected abstract void UnregisterInputSenderImpl(byte id);
 
+    protected abstract long GetInputRecvTimestampImpl();
     protected abstract void BeginPendInputImpl(ref long timestamp);
 
     protected abstract void PendInputTransformImpl(byte deviceID, byte controlID, Vector3 position, Quaternion orientation, byte policy);
@@ -85,7 +86,7 @@ public abstract class AirVRInputStream {
     protected abstract void PendInputByteImpl(byte deviceID, byte controlID, byte value, byte policy);
     protected abstract void PendInputRaycastHitImpl(byte deviceID, byte controlID, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal, byte policy);
 
-    protected abstract bool GetInputTransformImpl(byte deviceID, byte controlID, ref double timeStamp, ref Vector3 position, ref Quaternion orientation);
+    protected abstract bool GetInputTransformImpl(byte deviceID, byte controlID, ref Vector3 position, ref Quaternion orientation);
     protected abstract bool GetInputFloat4Impl(byte deviceID, byte controlID, ref Vector4 value);
     protected abstract bool GetInputFloat3Impl(byte deviceID, byte controlID, ref Vector3 value);
     protected abstract bool GetInputFloat2Impl(byte deviceID, byte controlID, ref Vector2 value);
@@ -96,6 +97,11 @@ public abstract class AirVRInputStream {
     protected abstract void SendPendingInputEventsImpl(long timestamp);
     protected abstract void ResetInputImpl();
 
+    public long timestamp {
+        get {
+            return GetInputRecvTimestampImpl();
+        }
+    }
 
     public virtual void Init() {
         _timer.Set(maxSendingRatePerSec);
@@ -254,22 +260,19 @@ public abstract class AirVRInputStream {
         PendInputTransformImpl((byte)sender.deviceID, controlID, position, orientation, (byte)SendingPolicy.Always);
     }
 
-    public void GetTransform(AirVRInputReceiver receiver, byte controlID, out double timeStamp, out Vector3 position, out Quaternion orientation) {
+    public void GetTransform(AirVRInputReceiver receiver, byte controlID, out Vector3 position, out Quaternion orientation) {
         Vector3 pos = Vector3.zero;
         Quaternion rot = Quaternion.identity;
-        double ts = 0.0;
 
         if (receiver.isRegistered) {
-            if (GetInputTransformImpl((byte)receiver.deviceID, controlID, ref ts, ref pos, ref rot) == false) {
+            if (GetInputTransformImpl((byte)receiver.deviceID, controlID, ref pos, ref rot) == false) {
                 pos = Vector3.zero;
                 rot = Quaternion.identity;
-                ts = 0.0;
             }
         }
 
         position = pos;
         orientation = rot;
-        timeStamp = ts;
     }
 
     public void PendRaycastHit(AirVRInputSender sender, byte controlID, Vector3 rayOrigin, Vector3 hitPosition, Vector3 hitNormal) {

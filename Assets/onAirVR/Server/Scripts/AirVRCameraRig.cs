@@ -18,7 +18,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     private const int InvalidPlayerID = -1;
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void ocs_GetViewNumber(int playerID, double timeStamp, float orientationX, float orientationY, float orientationZ, float orientationW, out int viewNumber);
+    private static extern void ocs_GetViewNumber(int playerID, long timeStamp, float orientationX, float orientationY, float orientationZ, float orientationW, out int viewNumber);
 
     [DllImport(AirVRServerPlugin.Name)]
     private static extern IntPtr ocs_InitStreams_RenderThread_Func();
@@ -140,10 +140,10 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         if (mediaStream != null && _mediaStreamJustStopped == false && _encodeVideoFrameRequested) {
             Assert.IsTrue(isBoundToClient);
 
-            double timeStamp = 0.0;
-            inputStream.GetTransform(AirVRInputDeviceName.HeadTracker, (byte)AirVRHeadTrackerKey.Transform, ref timeStamp, ref _cameraPosition, ref _cameraOrientation);
+            long timestamp = inputStream.timestamp;
+            inputStream.GetTransform(AirVRInputDeviceName.HeadTracker, (byte)AirVRHeadTrackerKey.Transform, ref _cameraPosition, ref _cameraOrientation);
 
-            ocs_GetViewNumber(playerID, timeStamp, _cameraOrientation.x, _cameraOrientation.y, _cameraOrientation.z, _cameraOrientation.w, out _viewNumber);
+            ocs_GetViewNumber(playerID, timestamp, _cameraOrientation.x, _cameraOrientation.y, _cameraOrientation.z, _cameraOrientation.w, out _viewNumber);
             updateCameraTransforms(_config, _cameraPosition, _cameraOrientation);
             updateControllerTransforms(_config);
 

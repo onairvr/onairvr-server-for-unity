@@ -95,8 +95,7 @@ public enum AirVRControllerKey {
 public enum AirVRScreenTouchKey {
     // reserve 0 ~ 9 for touches
 
-    TouchCount = 10,
-
+    TouchCount = 10
 }
 
 public enum AirVRHapticVibration {

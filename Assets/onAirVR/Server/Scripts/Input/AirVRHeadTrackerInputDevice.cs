@@ -19,5 +19,12 @@ public class AirVRHeadTrackerInputDevice : AirVRInputDevice {
         AddControlTransform((byte)AirVRHeadTrackerKey.Transform);
     }
 
+    protected override void ConfigureControls(AirVRInputStream inputStream) {
+        ConfigureControlTransform(inputStream, 
+                                  (byte)AirVRHeadTrackerKey.Transform, 
+                                  AirVRInputStream.InputFilter.PoseCAP, 
+                                  new AirVRInputStream.InputFilterParams());
+    }
+
     protected override void UpdateExtendedControls() {}
 }

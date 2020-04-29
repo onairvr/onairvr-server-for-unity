@@ -42,6 +42,7 @@ public abstract class AirVRInputSender : AirVRInputBase {
 }
 
 public abstract class AirVRInputReceiver : AirVRInputBase {
+    public virtual void ConfigureInputs(AirVRInputStream inputStream) { }
     public abstract void PollInputsPerFrame(AirVRInputStream inputStream);
 }
 
@@ -51,6 +52,23 @@ public abstract class AirVRInputStream {
         Always,
         NonzeroAlwaysZeroOnce,
         OnChange
+    }
+
+    public enum InputFilter {
+        None = 0,
+        PoseCAP
+    }
+
+    public class InputFilterParams {
+        public int queueSize;
+        public int order;
+        public float predictionTime;
+
+        public InputFilterParams(int queueSize = 3, int order = 2, float predictionTime = 0.5f) {
+            this.queueSize = queueSize;
+            this.order = order;
+            this.predictionTime = predictionTime;
+        }
     }
 
     public AirVRInputStream() {
@@ -74,6 +92,7 @@ public abstract class AirVRInputStream {
 
     protected abstract float maxSendingRatePerSec { get; }
     protected abstract void UnregisterInputSenderImpl(byte id);
+    protected abstract void ConfigureInputTransformImpl(byte deviceID, byte controlID, byte filter, InputFilterParams filerParams);
 
     protected abstract long GetInputRecvTimestampImpl();
     protected abstract void BeginPendInputImpl(ref long timestamp);
@@ -109,6 +128,10 @@ public abstract class AirVRInputStream {
 
     public virtual void Start() {
         _streaming = true;
+
+        foreach (var receiver in receivers.Values) {
+            receiver.ConfigureInputs(this);
+        }
     }
 
     public virtual void Stop() {
@@ -145,6 +168,12 @@ public abstract class AirVRInputStream {
                 receivers[key].OnUnregistered();
             }
         }
+    }
+
+    public void ConfigureInputTransform(AirVRInputReceiver receiver, byte controlID, InputFilter filter, InputFilterParams filterParams) {
+        Assert.IsTrue(receiver.isRegistered);
+
+        ConfigureInputTransformImpl((byte)receiver.deviceID, controlID, (byte)filter, filterParams);
     }
 
     public void PendTouch(AirVRInputSender sender, byte controlID, Vector2 position, bool touch) {

@@ -115,6 +115,7 @@ public abstract class AirVRInputDevice : AirVRInputReceiver {
     protected abstract string deviceName { get; }
     protected abstract void MakeControlList();
 
+    protected virtual void ConfigureControls(AirVRInputStream inputStream) {}
     protected virtual void UpdateExtendedControls() {}
 
     protected void AddControlTouch(byte controlID) {
@@ -143,6 +144,10 @@ public abstract class AirVRInputDevice : AirVRInputReceiver {
 
     protected void AddControlButton(byte controlID) {
         _controls.Add(controlID, new Button());
+    }
+
+    protected void ConfigureControlTransform(AirVRInputStream inputStream, byte controlID, AirVRInputStream.InputFilter filter, AirVRInputStream.InputFilterParams filterParams) {
+        inputStream.ConfigureInputTransform(this, controlID, filter, filterParams);
     }
 
     protected void AddExtControlAxis3D(byte controlID) {
@@ -276,7 +281,11 @@ public abstract class AirVRInputDevice : AirVRInputReceiver {
             return deviceName;
         }
     }
-    
+
+    public override void ConfigureInputs(AirVRInputStream inputStream) {
+        ConfigureControls(inputStream);
+    }
+
     public override void PollInputsPerFrame(AirVRInputStream inputStream) {
         foreach (var controlID in _controls.Keys) {
             _controls[controlID].PollInput(this, inputStream, controlID);

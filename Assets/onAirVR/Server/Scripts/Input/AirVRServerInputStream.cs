@@ -20,6 +20,9 @@ public class AirVRServerInputStream : AirVRInputStream {
     private static extern void ocs_UnregisterInputSender(int playerID, byte id);
 
     [DllImport(AirVRServerPlugin.Name)]
+    private static extern void ocs_ConfigureInputTransform(int playerID, byte deviceID, byte controlID, byte filter, int queueSize, int order, float predictionTime);
+
+    [DllImport(AirVRServerPlugin.Name)]
     private static extern long ocs_GetInputRecvTimestamp(int playerID);
 
     [DllImport(AirVRServerPlugin.Name)]
@@ -225,6 +228,12 @@ public class AirVRServerInputStream : AirVRInputStream {
         Assert.IsTrue(owner != null && owner.isBoundToClient);
 
         ocs_UnregisterInputSender(owner.playerID, id);
+    }
+
+    protected override void ConfigureInputTransformImpl(byte deviceID, byte controlID, byte filter, AirVRInputStream.InputFilterParams filterParams) {
+        Assert.IsTrue(owner != null && owner.isBoundToClient);
+
+        ocs_ConfigureInputTransform(owner.playerID, deviceID, controlID, filter, filterParams.queueSize, filterParams.order, filterParams.predictionTime);
     }
 
     protected override void PendInputTransformImpl(byte deviceID, byte controlID, Vector3 position, Quaternion orientation, byte policy) {

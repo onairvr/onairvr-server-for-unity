@@ -171,8 +171,6 @@ public abstract class AirVRInputStream {
     }
 
     public void ConfigureInputTransform(AirVRInputReceiver receiver, byte controlID, InputFilter filter, InputFilterParams filterParams) {
-        Assert.IsTrue(receiver.isRegistered);
-
         ConfigureInputTransformImpl((byte)receiver.deviceID, controlID, (byte)filter, filterParams);
     }
 

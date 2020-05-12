@@ -14,10 +14,10 @@ public class AirVRRightHandTrackerInputDevice : AirVRInputDevice {
         AddControlTransform((byte)AirVRRightHandTrackerKey.Transform);
     }
 
-    protected override void ConfigureControls(AirVRInputStream inputStream) {
-        ConfigureControlTransform(inputStream, 
-                                  (byte)AirVRRightHandTrackerKey.Transform, 
-                                  AirVRInputStream.InputFilter.PoseCAP,
-                                  new AirVRInputStream.InputFilterParams());
-    }
+    //protected override void ConfigureControls(AirVRInputStream inputStream) {
+    //    ConfigureControlTransform(inputStream, 
+    //                              (byte)AirVRRightHandTrackerKey.Transform, 
+    //                              AirVRInputStream.InputFilter.PoseCAP,
+    //                              new AirVRInputStream.InputFilterParams());
+    //}
 }

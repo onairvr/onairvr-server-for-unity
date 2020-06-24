@@ -8,198 +8,20 @@
  ***********************************************************/
 
 using UnityEngine;
+using UnityEngine.Assertions;
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 [Serializable]
-public class AirVRServerParamsReader {
+public class AirVRServerSettingsReader {
 #pragma warning disable 414
-    [SerializeField] private AirVRServerParams onairvr;
+    [SerializeField] private AirVRServerSettings onairvr;
 #pragma warning restore 414
 
-    public void ReadParams(string fileFrom, AirVRServerParams to) {
+    public void ReadSettings(string fileFrom, AirVRServerSettings to) {
         onairvr = to;
         JsonUtility.FromJsonOverwrite(File.ReadAllText(fileFrom), this);
-    }
-}
-
-[Serializable]
-public class AirVRServerParams {
-    public const float DefaultMaxFrameRate = 90.0f;
-    public const float DefaultDefaultFrameRate = 60.0f;
-    public const float DefaultApplicationFrameRate = 0.0f;
-    public const int DefaultMaxVideoBitrate = 160000000;
-    public const int DefaultDefaultVideoBitrate = 24000000;
-    public const int DefaultMaxClientCount = 1;
-    public const int DefaultPort = 9090;
-    public const string DefaultLicense = "onairvr.license";
-
-    public AirVRServerParams() {
-        maxFrameRate = DefaultMaxFrameRate;
-        defaultFrameRate = DefaultDefaultFrameRate;
-        applicationFrameRate = DefaultApplicationFrameRate;
-        vsyncCount = QualitySettings.vSyncCount;
-        maxVideoBitrate = DefaultMaxVideoBitrate;
-        defaultVideoBitrate = DefaultDefaultVideoBitrate;
-        maxClientCount = DefaultMaxClientCount;
-        stapPort = DefaultPort;
-        license = DefaultLicense;
-    }
-
-    public AirVRServerParams(AirVRServerInitParams initParams) {
-        maxFrameRate = initParams.maxFrameRate;
-        defaultFrameRate = initParams.defaultFrameRate;
-        applicationFrameRate = DefaultApplicationFrameRate;
-        vsyncCount = QualitySettings.vSyncCount;
-        maxVideoBitrate = DefaultMaxVideoBitrate;
-        defaultVideoBitrate = initParams.videoBitrate;
-        maxClientCount = initParams.maxClientCount;
-        stapPort = initParams.port;
-        license = initParams.licenseFilePath;
-    }
-
-    [SerializeField] private float maxFrameRate;
-    [SerializeField] private float defaultFrameRate;
-    [SerializeField] private float applicationFrameRate;
-    [SerializeField] private int vsyncCount;
-    [SerializeField] private int maxVideoBitrate;
-    [SerializeField] private int defaultVideoBitrate;
-    [SerializeField] private int maxClientCount;
-    [SerializeField] private string license;
-    [SerializeField] private int stapPort;
-    [SerializeField] private int ampPort;
-    [SerializeField] private bool loopbackOnly;
-    [SerializeField] private string profiler;
-
-    public float MaxFrameRate           { get { return maxFrameRate; } }
-    public float DefaultFrameRate       { get { return defaultFrameRate; } }
-    public float ApplicationFrameRate   { get { return applicationFrameRate; } }
-    public int VsyncCount               { get { return vsyncCount; } }
-    public int MaxVideoBitrate          { get { return maxVideoBitrate; } }
-    public int DefaultVideoBitrate      { get { return defaultVideoBitrate; } }
-    public int MaxClientCount           { get { return maxClientCount; } }
-    public string License               { get { return license; } }
-    public int StapPort                 { get { return stapPort; } }
-    public int AmpPort                  { get { return ampPort; } }
-    public bool LoopbackOnly            { get { return loopbackOnly; } }
-    public string Profiler              { get { return profiler; } }
-
-    private int parseInt(string value, int defaultValue, Func<int, bool> predicate, Action<string> failed = null) {
-        int result;
-        if (int.TryParse(value, out result) && predicate(result)) {
-            return result;
-        }
-
-        if (failed != null) {
-            failed(value);
-        }
-        return defaultValue;
-    }
-
-    private float parseFloat(string value, float defaultValue, Func<float, bool> predicate, Action<string> failed = null) {
-        float result;
-        if (float.TryParse(value, out result) && predicate(result)) {
-            return result;
-        }
-
-        if (failed != null) {
-            failed(value);
-        }
-        return defaultValue;
-    }
-
-    private Dictionary<string, string> parseCommandLine(string[] args) {
-        if (args == null) {
-            return null;
-        }
-
-        Dictionary<string, string> result = new Dictionary<string, string>();
-        for (int i = 0; i < args.Length; i++) {
-            int splitIndex = args[i].IndexOf("=");
-            if (splitIndex <= 0) {
-                continue;
-            }
-
-            string name = args[i].Substring(0, splitIndex);
-            string value = args[i].Substring(splitIndex + 1);
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(value)) {
-                continue;
-            }
-
-            result.Add(name, value);
-        }
-        return result.Count > 0 ? result : null;
-    }
-
-    public void ParseCommandLineArgs(string[] args) {
-        Dictionary<string, string> pairs = parseCommandLine(args);
-        if (pairs == null) {
-            return;
-        }
-
-        string keyConfigFile = "config";
-        if (pairs.ContainsKey(keyConfigFile)) {
-            if (File.Exists(pairs[keyConfigFile])) {
-                try {
-                    AirVRServerParamsReader reader = new AirVRServerParamsReader();
-                    reader.ReadParams(pairs[keyConfigFile], this);
-                }
-                catch (Exception e) {
-                    Debug.LogWarning("[onAirVR] WARNING: failed to parse " + pairs[keyConfigFile] + " : " + e.ToString());
-                }
-            }
-            pairs.Remove("config");
-        }
-
-        foreach (string key in pairs.Keys) {
-            if (key.Equals("onairvr_stap_port")) {
-                stapPort = parseInt(pairs[key], StapPort,
-                    (parsed) => {
-                        return 0 <= parsed && parsed <= 65535;
-                    },
-                    (val) => {
-                        Debug.LogWarning("[onAirVR] WARNING: STAP Port number of the command line argument is invalid : " + val);
-                    });
-            }
-            else if (key.Equals("onairvr_amp_port")) {
-                ampPort = parseInt(pairs[key], AmpPort,
-                    (parsed) => {
-                        return 0 <= parsed && parsed <= 65535;
-                    },
-                    (val) => {
-                        Debug.LogWarning("[onAirVR] WARNING: AMP Port number of the command line argument is invalid : " + val);
-                    });
-            }
-            else if (key.Equals("onairvr_loopback_only")) {
-                loopbackOnly = pairs[key].Equals("true");
-            }
-            else if (key.Equals("onairvr_license")) {
-                license = pairs[key];
-            }
-            else if (key.Equals("onairvr_video_bitrate")) {
-                defaultVideoBitrate = parseInt(pairs[key], DefaultVideoBitrate,
-                    (parsed) => {
-                        return parsed > 0;
-                    });
-            }
-            else if (key.Equals("onairvr_application_frame_rate")) {
-                applicationFrameRate = parseFloat(pairs[key], ApplicationFrameRate,
-                    (parsed) => {
-                        return parsed >= 0.0f;
-                    });
-            }
-            else if (key.Equals("onairvr_vsync_count")) {
-                vsyncCount = parseInt(pairs[key], VsyncCount,
-                    (parsed) => {
-                        return parsed >= 0;
-                    });
-            }
-            else if (key.Equals("onairvr_profiler")) {
-                profiler = pairs[key];
-            }
-        }
     }
 }
 
@@ -240,8 +62,7 @@ public class AirVRServer : MonoBehaviour {
     private static extern void ocs_EnableProfiler(int profilers);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void ocs_SetVideoEncoderParameters(float maxFrameRate, float defaultFrameRate,
-                                                             int maxBitRate, int defaultBitRate, int gopCount);
+    private static extern void ocs_SetVideoEncoderParameters(float maxFrameRate, int gopCount);
 
     [DllImport(AirVRServerPlugin.AudioPluginName)]
     private static extern void ocs_EncodeAudioFrame(int playerID, float[] data, int sampleCount, int channels, double timestamp);
@@ -261,30 +82,28 @@ public class AirVRServer : MonoBehaviour {
     private static AirVRServer _instance;
     private static EventHandler _Delegate;
 
-    internal static AirVRServerParams serverParams {
+    internal static AirVRServerSettings settings {
         get {
-            Debug.Assert(_instance != null);
-            Debug.Assert(_instance._serverParams != null);
+            Assert.IsNotNull(_instance);
+            Assert.IsNotNull(_instance._settings);
 
-            return _instance._serverParams;
+            return _instance._settings;
         }
     }
 
-    internal static void LoadOnce(AirVRServerInitParams initParams = null) {
+    internal static void LoadOnce() {
         if (_instance == null) {
             GameObject go = new GameObject("AirVRServer");
             go.AddComponent<AirVRServer>();
-            Debug.Assert(_instance != null);
+            Assert.IsNotNull(_instance);
 
-            _instance._serverParams = (initParams != null) ? new AirVRServerParams(initParams) : new AirVRServerParams();
-            _instance._serverParams.ParseCommandLineArgs(Environment.GetCommandLineArgs());
+            var settings = Resources.Load<AirVRServerSettings>("AirVRServerSettings");
+            if (settings == null) {
+                settings = ScriptableObject.CreateInstance<AirVRServerSettings>();
+            }
+            _instance._settings = settings;
+            _instance._settings.ParseCommandLineArgs(Environment.GetCommandLineArgs());
         }
-    }
-
-    internal static int GetApplicationFrameRate(float maxCameraRigVideoFrameRate) {
-        return serverParams.ApplicationFrameRate > 0.0f ?
-            Mathf.RoundToInt(serverParams.ApplicationFrameRate) :
-            Mathf.Max(Mathf.RoundToInt(maxCameraRigVideoFrameRate), 10);
     }
 
     internal static void NotifyClientConnected(int clientHandle) {
@@ -318,7 +137,7 @@ public class AirVRServer : MonoBehaviour {
     }
 
     private bool _startedUp = false;
-    private AirVRServerParams _serverParams;
+    private AirVRServerSettings _settings;
     private float _lastTimeEvalFps = 0.0f;
     private int _frameCountSinceLastEvalFps = 0;
 
@@ -334,12 +153,16 @@ public class AirVRServer : MonoBehaviour {
         _lastTimeEvalFps = Time.realtimeSinceStartup;
 
         try {
-            QualitySettings.vSyncCount = serverParams.VsyncCount;
+            Assert.IsNotNull(_settings);
 
-            ocs_SetLicenseFile(Application.isEditor ? System.IO.Path.Combine("Assets/onAirVR/Server/Editor/Misc", AirVRServerParams.DefaultLicense) : serverParams.License);
-            ocs_SetVideoEncoderParameters(serverParams.MaxFrameRate, serverParams.DefaultFrameRate, serverParams.MaxVideoBitrate, serverParams.DefaultVideoBitrate, GroupOfPictures);
+            if (_settings.AdaptiveFrameRate) {
+                QualitySettings.vSyncCount = 0;
+            }
 
-            int startupResult = ocs_Startup(serverParams.MaxClientCount, serverParams.StapPort, serverParams.AmpPort, serverParams.LoopbackOnly, AudioSettings.outputSampleRate);
+            ocs_SetLicenseFile(Application.isEditor ? "Assets/onAirVR/Server/Editor/Misc/onairvr.license" : _settings.License);
+            ocs_SetVideoEncoderParameters(120.0f, GroupOfPictures);
+
+            int startupResult = ocs_Startup(_settings.MaxClientCount, _settings.StapPort, _settings.AmpPort, _settings.LoopbackOnly, AudioSettings.outputSampleRate);
             if (startupResult == 0) {   // no error
                 System.IntPtr pluginPtr = System.IntPtr.Zero;
                 ocs_GetOCSServerPluginPtr(ref pluginPtr);
@@ -348,7 +171,7 @@ public class AirVRServer : MonoBehaviour {
                 GL.IssuePluginEvent(ocs_Startup_RenderThread_Func(), 0);
                 _startedUp = true;
 
-                switch (serverParams.Profiler) {
+                switch (_settings.Profiler) {
                     case "full":
                         ocs_EnableProfiler(ProfilerFrame | ProfilerReport);
                         break;
@@ -362,7 +185,7 @@ public class AirVRServer : MonoBehaviour {
                         break;
                 }
 
-                Debug.Log("[onAirVR] INFO: The onAirVR Server has started on port " + serverParams.StapPort + ".");
+                Debug.Log("[onAirVR] INFO: The onAirVR Server has started on port " + _settings.StapPort + ".");
             }
             else {
                 string reason;
@@ -403,7 +226,7 @@ public class AirVRServer : MonoBehaviour {
     private void Update() {
         const float evalFpsPeriod = 10.0f;
 
-        if (string.IsNullOrEmpty(serverParams.Profiler)) {
+        if (string.IsNullOrEmpty(_settings.Profiler)) {
             return;
         }
 

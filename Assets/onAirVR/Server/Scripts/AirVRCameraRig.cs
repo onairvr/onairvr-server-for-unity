@@ -36,9 +36,6 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     private static extern bool ocs_IsStreaming(int playerID);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern IntPtr ocs_AdjustBitRate_RenderThread_Func();
-
-    [DllImport(AirVRServerPlugin.Name)]
     private static extern void ocs_RecenterPose(int playerID);
 
     [DllImport(AirVRServerPlugin.Name)]
@@ -102,7 +99,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
             return;
         }
 
-        AirVRServer.LoadOnce(FindObjectOfType<AirVRServerInitParams>());
+        AirVRServer.LoadOnce();
 
         disableCameras();
         AirVRCameraRigManager.managerOnCurrentScene.RegisterCameraRig(this);
@@ -382,17 +379,17 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         }
     }
 
+    public bool isActive {
+        get {
+            return isBoundToClient && isStreaming;
+        }
+    }
+
     public AirVRClientConfig GetConfig() {
         if (isBoundToClient) {
             return _config;
         }
         return null;
-    }
-
-    public void AdjustBitrate(uint bitrateInKbps) {
-        if (isBoundToClient) {
-            GL.IssuePluginEvent(ocs_AdjustBitRate_RenderThread_Func(), AirVRServerPlugin.RenderEventArg((uint)playerID, bitrateInKbps));
-        }
     }
 
     public void RecenterPose() {

@@ -123,7 +123,7 @@ public class AirVRClientConfig {
 
     public float framerate {
         get {
-            return Mathf.Min(FrameRate, AirVRServer.serverParams.MaxFrameRate);
+            return FrameRate;
         }
     }
 

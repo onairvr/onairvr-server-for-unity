@@ -19,7 +19,7 @@ public class AirVRPointer : MonoBehaviour {
     private AirVRTrackerDeviceFeedback _deviceFeedback;
 
     [SerializeField] private bool _renderOnClient = false;
-    [SerializeField] private Texture2D _cookie;
+    [SerializeField] private Texture2D _cookie = null;
     [SerializeField] private float _depthScaleMultiplier = 0.015f;
 
     private void Awake() {

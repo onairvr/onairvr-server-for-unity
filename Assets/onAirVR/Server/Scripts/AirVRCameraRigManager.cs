@@ -90,6 +90,8 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void updateApplicationTargetFrameRate() {
+        if (AirVRServer.settings.AdaptiveFrameRate == false) { return; }
+
         List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAllRetainedCameraRigs(cameraRigs);
 
@@ -97,10 +99,10 @@ public class AirVRCameraRigManager : MonoBehaviour {
         foreach (AirVRCameraRig cameraRig in cameraRigs) {
             if (cameraRig.isStreaming) {
                 maxCameraRigVideoFrameRate = Mathf.Max(maxCameraRigVideoFrameRate, cameraRig.GetConfig().framerate);
-            }
+            } 
         }
 
-        Application.targetFrameRate = AirVRServer.GetApplicationFrameRate(maxCameraRigVideoFrameRate);
+        Application.targetFrameRate = Mathf.Max(Mathf.RoundToInt(maxCameraRigVideoFrameRate), AirVRServer.settings.MinFrameRate);
     }
 
     void Awake() {

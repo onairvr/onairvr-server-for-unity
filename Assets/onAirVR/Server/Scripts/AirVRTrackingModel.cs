@@ -48,8 +48,8 @@ public abstract class AirVRTrackingModel {
         OnUpdateEyePose(config, centerEyePosition, centerEyeOrientation);
 
         Transform trackingRoot = centerEyeAnchor.parent;
-        HMDSpaceToWorldMatrix = Matrix4x4.TRS(trackingRoot.localToWorldMatrix.MultiplyPoint(centerEyeAnchor.localPosition - centerEyePosition), 
-                                              HMDTrackingRootRotation, 
+        HMDSpaceToWorldMatrix = Matrix4x4.TRS(trackingRoot.localToWorldMatrix.MultiplyPoint(centerEyeAnchor.localPosition - centerEyePosition),
+                                              HMDTrackingRootRotation,
                                               trackingRoot.lossyScale);
     }
 }
@@ -134,7 +134,6 @@ public class AirVRExternalTrackerTrackingModel : AirVRTrackingModel {
     }
 
     // implements AirVRTrackingModel
-
     protected override Quaternion HMDTrackingRootRotation {
         get {
             return trackingOriginRotation * _localTrackerRotationOnIdentityHeadOrientation;

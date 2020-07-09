@@ -63,7 +63,6 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
     private List<RaycastHit> _raycastResults = new List<RaycastHit>();
 
     [System.NonSerialized] private Canvas _canvas;
-    [SerializeField] private AirVRPointer[] _pointers = null;
 
     private Canvas canvas {
         get {
@@ -72,12 +71,6 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
             }
             _canvas = GetComponent<Canvas>();
             return _canvas;
-        }
-    }
-
-    public AirVRPointer[] pointers {
-        get {
-            return _pointers;
         }
     }
 
@@ -199,7 +192,7 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
     // overrides GraphicRaycaster
     public override Camera eventCamera {
         get {
-            return _pointers[0].cameraRig.cameras[0];
+            return AirVRPointer.pointers[0].cameraRig.cameras[0];
         }
     }
 }

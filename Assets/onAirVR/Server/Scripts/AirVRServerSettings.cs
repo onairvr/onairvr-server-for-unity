@@ -19,7 +19,7 @@ public class AirVRServerSettings : ScriptableObject {
     [SerializeField] private string license = "onairvr.license";
     [SerializeField] private int maxClientCount = 1;
     [SerializeField] private int stapPort = 9090;
-    [SerializeField] private bool adaptiveFrameRate = true;
+    [SerializeField] private bool adaptiveFrameRate = false;
     [SerializeField] [Range(10, 120)] private int minFrameRate = 10;
 
     // overridable by command line args only

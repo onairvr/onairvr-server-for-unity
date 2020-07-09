@@ -70,9 +70,6 @@ public class AirVRServer : MonoBehaviour {
     [DllImport(AirVRServerPlugin.AudioPluginName)]
     private static extern void ocs_EncodeAudioFrameForAllPlayers(float[] data, int sampleCount, int channels, double timestamp);
 
-    //[DllImport(AirVRServerPlugin.Name)]
-    //private static extern System.IntPtr RenderServerShutdownFunc();
-
     public interface EventHandler {
         void AirVRServerFailed(string reason);
         void AirVRServerClientConnected(int clientHandle);
@@ -117,8 +114,6 @@ public class AirVRServer : MonoBehaviour {
             _Delegate.AirVRServerClientDisconnected(clientHandle);
         }
     }
-
-    //internal static void HandleProfilerFrame()
 
     public static EventHandler Delegate {
         set {

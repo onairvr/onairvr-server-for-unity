@@ -12,14 +12,13 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class AirVRSamplePointerScene : MonoBehaviour {
-    private const float IndicatorDuration = 0.25f;
-
+public class AirVRSamplePointerScene : MonoBehaviour {   
     private AirVRStereoCameraRig _stereoCameraRig;
-    private bool _loadingBasicScene;
     private Button _button;
     private Image _indicator;
     private float _remainingToStopIndicating = -1.0f;
+
+    [SerializeField] private AnimationCurve _vibration = null;
 
     private void Awake() {
         _stereoCameraRig = FindObjectOfType<AirVRStereoCameraRig>();
@@ -32,11 +31,10 @@ public class AirVRSamplePointerScene : MonoBehaviour {
 
     private IEnumerator Start() {
         _button.onClick.AddListener(() => {
-            _remainingToStopIndicating = IndicatorDuration;
+            _remainingToStopIndicating = _vibration.keys[_vibration.keys.Length - 1].time;
             _indicator.gameObject.SetActive(true);
 
-            AirVRInput.RequestVibration(_stereoCameraRig, AirVRInput.Device.LeftHandTracker, AirVRHapticVibration.OneTime_Short);
-            AirVRInput.RequestVibration(_stereoCameraRig, AirVRInput.Device.RightHandTracker, AirVRHapticVibration.OneTime_Short);
+            AirVRInput.SetVibration(_stereoCameraRig, AirVRInput.Device.RightHandTracker, _vibration, _vibration);
         });
 
         yield return StartCoroutine(AirVRCameraFade.FadeAllCameras(this, true, 0.5f));

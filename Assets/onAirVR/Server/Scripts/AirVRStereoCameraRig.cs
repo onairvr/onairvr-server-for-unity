@@ -8,7 +8,7 @@
  ***********************************************************/
 
 using UnityEngine;
-using UnityEngine.Assertions;
+using UnityEngine.Audio;
 
 public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelContext {
     private readonly string TrackingSpaceName = "TrackingSpace";
@@ -19,6 +19,13 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
     private readonly string RightHandAnchorName = "RightHandAnchor";
     private readonly int CameraLeftIndex = 0;
     private readonly int CameraRightIndex = 1;
+
+    public enum HandSelect {
+        None,
+        Left,
+        Right,
+        Both
+    }
 
     public enum TrackingModel {
         Head,
@@ -33,7 +40,23 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
 
     private AirVRTrackingModel _trackingModelObject;
 
+    [SerializeField] private HandSelect _eventSystemResponsive = HandSelect.None;
+    [SerializeField] private bool _renderControllersOnClient = false;
+    [SerializeField] private bool _raycastGraphic = true;
+    [SerializeField] private bool _raycastPhysics = true;
+    [SerializeField] private LayerMask _physicsRaycastEventMask = -1;
+
+    [SerializeField] private bool _sendAudio = true;
+    [SerializeField] private AirVRServerAudioOutputRouter.Input _audioInput = AirVRServerAudioOutputRouter.Input.AudioListener;
+    [SerializeField] private AudioMixer _targetAudioMixer = null;
+    [SerializeField] private string _exposedRendererIDParameterName = null;
+
+    [SerializeField] private TrackingModel _trackingModel = TrackingModel.Head;
+    [SerializeField] private Transform _externalTrackingOrigin = null;
+    [SerializeField] private Transform _externalTracker = null;
+
     internal Transform trackingSpace { get; private set; }
+    internal bool renderControllersOnClient { get { return _renderControllersOnClient; } }
 
     public Camera leftEyeCamera {
         get {
@@ -53,10 +76,6 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
     public Transform leftHandAnchor { get; private set; }
     public Transform rightHandAnchor { get; private set; }
 
-    public TrackingModel trackingModel;
-    public Transform externalTrackingOrigin;
-    public Transform externalTracker;
-
     private TrackingModel trackingModelOf(AirVRTrackingModel trackingModelObject) {
         return trackingModelObject.GetType() == typeof(AirVRHeadTrackingModel)             ? TrackingModel.Head :
                trackingModelObject.GetType() == typeof(AirVRIPDOnlyTrackingModel)          ? TrackingModel.InterpupillaryDistanceOnly :
@@ -66,19 +85,19 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
 
     private AirVRTrackingModel createTrackingModelObject(TrackingModel model) {
         return model == TrackingModel.InterpupillaryDistanceOnly ?  new AirVRIPDOnlyTrackingModel(this, leftEyeAnchor, centerEyeAnchor, rightEyeAnchor) :
-               model == TrackingModel.ExternalTracker            ?  new AirVRExternalTrackerTrackingModel(this, leftEyeAnchor, centerEyeAnchor, rightEyeAnchor, externalTrackingOrigin, externalTracker) :
+               model == TrackingModel.ExternalTracker            ?  new AirVRExternalTrackerTrackingModel(this, leftEyeAnchor, centerEyeAnchor, rightEyeAnchor, _externalTrackingOrigin, _externalTracker) :
                model == TrackingModel.NoPositionTracking         ?  new AirVRNoPotisionTrackingModel(this, leftEyeAnchor, centerEyeAnchor, rightEyeAnchor) :
                                                                     new AirVRHeadTrackingModel(this, leftEyeAnchor, centerEyeAnchor, rightEyeAnchor) as AirVRTrackingModel;
     }
 
     private void updateTrackingModel() {
-        if (_trackingModelObject == null || trackingModelOf(_trackingModelObject) != trackingModel) {
-            _trackingModelObject = createTrackingModelObject(trackingModel);
+        if (_trackingModelObject == null || trackingModelOf(_trackingModelObject) != _trackingModel) {
+            _trackingModelObject = createTrackingModelObject(_trackingModel);
         }
         if (trackingModelOf(_trackingModelObject) == TrackingModel.ExternalTracker) {
             AirVRExternalTrackerTrackingModel model = _trackingModelObject as AirVRExternalTrackerTrackingModel;
-            model.trackingOrigin = externalTrackingOrigin;
-            model.tracker = externalTracker;
+            model.trackingOrigin = _externalTrackingOrigin;
+            model.tracker = _externalTracker;
         }
     }
 
@@ -125,14 +144,50 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
         }
     }
 
-    protected override void init() {
-        inputStream.AddInputDevice(new AirVRHeadTrackerInputDevice());
-        inputStream.AddInputDevice(new AirVRLeftHandTrackerInputDevice());
-        inputStream.AddInputDevice(new AirVRRightHandTrackerInputDevice());
-        inputStream.AddInputDevice(new AirVRControllerInputDevice());
+    protected override void onAwake() {
+        switch (_eventSystemResponsive) {
+            case HandSelect.Left:
+                prepareForEventSystem(leftHandAnchor.gameObject.AddComponent<AirVRPointer>(), AirVRInputDeviceID.LeftHandTracker);
+                break;
+            case HandSelect.Right:
+                prepareForEventSystem(rightHandAnchor.gameObject.AddComponent<AirVRPointer>(), AirVRInputDeviceID.RightHandTracker);
+                break;
+            case HandSelect.Both:
+                prepareForEventSystem(leftHandAnchor.gameObject.AddComponent<AirVRPointer>(), AirVRInputDeviceID.LeftHandTracker);
+                prepareForEventSystem(rightHandAnchor.gameObject.AddComponent<AirVRPointer>(), AirVRInputDeviceID.RightHandTracker);
+                break;
+        }
 
+        if (_sendAudio) {
+            var router = centerEyeAnchor.gameObject.AddComponent<AirVRServerAudioOutputRouter>();
+            router.input = _audioInput;
+            router.targetAudioMixer = _targetAudioMixer;
+            router.exposedRendererIDParameterName = _exposedRendererIDParameterName;
+            router.targetCameraRig = this;
+
+            if (_audioInput == AirVRServerAudioOutputRouter.Input.AudioListener) {
+                router.output = AirVRServerAudioOutputRouter.Output.All;
+
+                centerEyeAnchor.gameObject.AddComponent<AudioListener>();
+            }
+            else {
+                router.output = AirVRServerAudioOutputRouter.Output.One;
+            }
+        }
+    }
+
+    private void prepareForEventSystem(AirVRPointer pointer, AirVRInputDeviceID srcDevice) {
+        pointer.Configure(this, srcDevice);
+
+        if (_raycastPhysics) {
+            var raycaster = pointer.gameObject.AddComponent<AirVRPhysicsRaycaster>();
+            raycaster.eventMask = _physicsRaycastEventMask;
+        }
+    }
+
+    protected override void onStart() {
         if (_trackingModelObject == null) {
-            _trackingModelObject = createTrackingModelObject(trackingModel);
+            _trackingModelObject = createTrackingModelObject(_trackingModel);
         }
     }
 
@@ -179,37 +234,19 @@ public sealed class AirVRStereoCameraRig : AirVRCameraRig, IAirVRTrackingModelCo
     }
 
     protected override void updateControllerTransforms(AirVRClientConfig config) {
-        Vector3 position = Vector3.zero;
-        Quaternion orientation = Quaternion.identity;
+        var pose = inputStream.GetPose((byte)AirVRInputDeviceID.LeftHandTracker, (byte)AirVRHandTrackerControl.Pose);
+        leftHandAnchor.localPosition = pose.position;
+        leftHandAnchor.localRotation = pose.rotation;
 
-        if (inputStream.GetTransform(AirVRInputDeviceName.LeftHandTracker, (byte)AirVRLeftHandTrackerKey.Transform, ref position, ref orientation)) {
-            leftHandAnchor.localPosition = position;
-            leftHandAnchor.localRotation = orientation;
-        }
-        if (inputStream.GetTransform(AirVRInputDeviceName.RightHandTracker, (byte)AirVRRightHandTrackerKey.Transform, ref position, ref orientation)) {
-            rightHandAnchor.localPosition = position;
-            rightHandAnchor.localRotation = orientation;
-        }
+        pose = inputStream.GetPose((byte)AirVRInputDeviceID.RightHandTracker, (byte)AirVRHandTrackerControl.Pose);
+        rightHandAnchor.localPosition = pose.position;
+        rightHandAnchor.localRotation = pose.rotation;
     }
 
-    internal override Matrix4x4 clientSpaceToWorldMatrix {
-        get {
-            Assert.IsNotNull(_trackingModelObject);
-            return _trackingModelObject.HMDSpaceToWorldMatrix;
-        }
-    }
-
-    internal override Transform headPose {
-        get {
-            return centerEyeAnchor;
-        }
-    }
-
-    internal override Camera[] cameras {
-        get {
-            return _cameras;
-        }
-    }
+    internal override bool raycastGraphic => _raycastGraphic;
+    internal override Matrix4x4 clientSpaceToWorldMatrix => _trackingModelObject.HMDSpaceToWorldMatrix;
+    internal override Transform headPose => centerEyeAnchor;
+    internal override Camera[] cameras => _cameras;
 
     // implements IAirVRTrackingModelContext
     void IAirVRTrackingModelContext.RecenterCameraRigPose() {

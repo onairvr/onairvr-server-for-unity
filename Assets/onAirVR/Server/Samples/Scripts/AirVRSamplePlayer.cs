@@ -10,16 +10,14 @@
 using UnityEngine;
 
 public class AirVRSamplePlayer : MonoBehaviour {
-    private const float ThrowSpeed = 12.0f;
-    private const float ThrowTorqueSpeed = 20.0f;
-
     private AirVRStereoCameraRig _cameraRig;
     private MeshRenderer _head;
     private MeshRenderer _leftController;
     private MeshRenderer _rightController;
-    private AudioSource _soundShot;
+    private Color _leftControllerColor;
+    private Color _rightControllerColor;
 
-    public AirVRSampleCan canPrefab;
+    [SerializeField] private Color _triggeredControllerColor = new Color(224 / 255.0f, 58 / 255.0f, 69 / 255.0f);
 
     private void Awake() {
         _cameraRig = GetComponentInChildren<AirVRStereoCameraRig>();
@@ -30,7 +28,9 @@ public class AirVRSamplePlayer : MonoBehaviour {
         }
         _leftController = _cameraRig.transform.Find("TrackingSpace/LeftHandAnchor/Controller").GetComponent<MeshRenderer>();
         _rightController = _cameraRig.transform.Find("TrackingSpace/RightHandAnchor/Controller").GetComponent<MeshRenderer>();
-        _soundShot = transform.Find("SoundShot").GetComponent<AudioSource>();
+
+        _leftControllerColor = _leftController.material.color;
+        _rightControllerColor = _rightController.material.color;
     }
 
     private void Update() {
@@ -40,20 +40,22 @@ public class AirVRSamplePlayer : MonoBehaviour {
         _leftController.enabled = _cameraRig.isActive && AirVRInput.IsDeviceAvailable(_cameraRig, AirVRInput.Device.LeftHandTracker);
         _rightController.enabled = _cameraRig.isActive && AirVRInput.IsDeviceAvailable(_cameraRig, AirVRInput.Device.RightHandTracker);
 
-        if (AirVRInput.GetDown(_cameraRig, AirVRInput.Button.X) ||
-            AirVRInput.GetDown(_cameraRig, AirVRInput.Button.LIndexTrigger)) {
-            throwCan(_cameraRig.leftHandAnchor);
+        if (AirVRInput.Get(_cameraRig, AirVRInput.Button.X) ||
+            AirVRInput.Get(_cameraRig, AirVRInput.Button.Y) ||
+            AirVRInput.Get(_cameraRig, AirVRInput.Button.LIndexTrigger)) {
+            _leftController.material.color = _triggeredControllerColor;
         }
-        if (AirVRInput.GetDown(_cameraRig, AirVRInput.Button.A) ||
-            AirVRInput.GetDown(_cameraRig, AirVRInput.Button.RIndexTrigger)) {
-            throwCan(_cameraRig.rightHandAnchor);
+        else {
+            _leftController.material.color = _leftControllerColor;
         }
-    }
 
-    private void throwCan(Transform hand) {
-        AirVRSampleCan can = Instantiate(canPrefab, hand.position, hand.rotation) as AirVRSampleCan;
-        can.Throw(hand.forward * ThrowSpeed, Vector3.right * ThrowTorqueSpeed);
-
-        _soundShot.Play();
+        if (AirVRInput.Get(_cameraRig, AirVRInput.Button.A) ||
+            AirVRInput.Get(_cameraRig, AirVRInput.Button.B) ||
+            AirVRInput.Get(_cameraRig, AirVRInput.Button.RIndexTrigger)) {
+            _rightController.material.color = _triggeredControllerColor;
+        }
+        else {
+            _rightController.material.color = _leftControllerColor;
+        }
     }
 }

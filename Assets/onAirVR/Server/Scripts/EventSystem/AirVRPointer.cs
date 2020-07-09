@@ -15,70 +15,26 @@ public class AirVRPointer : MonoBehaviour {
     public static List<AirVRPointer> pointers = new List<AirVRPointer>();
 
     private AirVRStereoCameraRig _cameraRig = null;
-    private AirVRInput.Device _inputDevice = AirVRInput.Device.Unknown;
-    private AirVRTrackerDeviceFeedback _deviceFeedback;
+    private Feedback _feedback = null;
 
-    [SerializeField] private bool _renderOnClient = false;
-    [SerializeField] private Texture2D _cookie = null;
-    [SerializeField] private float _depthScaleMultiplier = 0.015f;
-
-    private void Awake() {
-        pointers.Add(this);
-
-        var grandparent = transform.parent ? transform.parent.parent : null;
-        _cameraRig = grandparent ? grandparent.GetComponent<AirVRStereoCameraRig>() : null;
-
-        if (_cameraRig == null) { return; }
-
-        if (gameObject.name == "LeftHandAnchor") {
-            _inputDevice = AirVRInput.Device.LeftHandTracker;
-        }
-        else if (gameObject.name == "RightHandAnchor") {
-            _inputDevice = AirVRInput.Device.RightHandTracker;
-        }
-        else {
-            throw new UnityException("[ERROR] AirVRPointer must be attached LeftHandAnchor or RightHandAnchor of AirVRStereoCameraRig");
-        }
+    private Vector3 _lastRaycastHitOrigin = Vector3.zero;
+    private Vector3 _lastRaycastHitPosition = Vector3.zero;
+    private Vector3 _lastRaycastHitNormal = Vector3.zero;
+    
+    public void Configure(AirVRStereoCameraRig cameraRig, AirVRInputDeviceID srcDevice) {
+        _cameraRig = cameraRig;
+        _feedback = new Feedback(this, srcDevice);
     }
 
     private void Start() {
-        switch (_inputDevice) {
-            case AirVRInput.Device.LeftHandTracker:
-                _deviceFeedback = new AirVRLeftHandTrackerDeviceFeedback(_cookie, _depthScaleMultiplier);
-                break;
-            case AirVRInput.Device.RightHandTracker:
-                _deviceFeedback = new AirVRRightHandTrackerDeviceFeedback(_cookie, _depthScaleMultiplier);
-                break;
-            default:
-                return;
-        }
+        pointers.Add(this);
 
-        _cameraRig.inputStream.AddInputDeviceFeedback(_deviceFeedback);
-    }
-
-    protected virtual void Update() {
-        if (AirVRInput.IsDeviceAvailable(_cameraRig, _inputDevice) == false) { return; }
-
-        if (_renderOnClient && _deviceFeedback.renderOnClient == false) {
-            _deviceFeedback.renderOnClient = true;
-            _deviceFeedback.EnableRaycastHit(true);
-        }
-        else if (_renderOnClient == false && _deviceFeedback.renderOnClient) {
-            _deviceFeedback.renderOnClient = false;
-            _deviceFeedback.EnableRaycastHit(false);
-        }
-    }
-
-    private void OnDisable() {
-        if (AirVRInput.IsDeviceAvailable(_cameraRig, _inputDevice) == false) { return; }
-
-        if (_deviceFeedback.renderOnClient) {
-            _deviceFeedback.renderOnClient = false;
-            _deviceFeedback.EnableRaycastHit(false);
-        }
+        _cameraRig.inputStream.RegisterInputSender(_feedback);
     }
 
     private void OnDestroy() {
+        _cameraRig.inputStream.UnregisterInputSender(_feedback);
+
         pointers.Remove(this);
     }
 
@@ -90,9 +46,10 @@ public class AirVRPointer : MonoBehaviour {
 
     public bool interactable {
         get {
-            if (_renderOnClient == false) { return true; }
+            if (_cameraRig == null) { return false; }
+            if (_cameraRig.renderControllersOnClient == false) { return true; }
 
-            return AirVRInput.IsDeviceFeedbackEnabled(_cameraRig, _inputDevice);
+            return _cameraRig.inputStream.GetByteAxis(_feedback.id, (byte)AirVRHandTrackerControl.Status) != 0;
         }
     }
 
@@ -100,13 +57,13 @@ public class AirVRPointer : MonoBehaviour {
         get {
             if (_cameraRig == null) { return false; }
 
-            switch (_inputDevice) {
-                case AirVRInput.Device.LeftHandTracker:
-                    return AirVRInput.GetDown(_cameraRig, AirVRInput.Button.LIndexTrigger) ||
-                           AirVRInput.GetDown(_cameraRig, AirVRInput.Button.X);
-                case AirVRInput.Device.RightHandTracker:
-                    return AirVRInput.GetDown(_cameraRig, AirVRInput.Button.RIndexTrigger) ||
-                           AirVRInput.GetDown(_cameraRig, AirVRInput.Button.A);
+            switch ((AirVRInputDeviceID)_feedback.id) {
+                case AirVRInputDeviceID.LeftHandTracker:
+                    return _cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLIndexTrigger) ||
+                           _cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonX);
+                case AirVRInputDeviceID.RightHandTracker:
+                    return _cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRIndexTrigger) ||
+                           _cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonA);
                 default:
                     return false;
             }
@@ -117,13 +74,13 @@ public class AirVRPointer : MonoBehaviour {
         get {
             if (_cameraRig == null) { return false; }
 
-            switch (_inputDevice) {
-                case AirVRInput.Device.LeftHandTracker:
-                    return AirVRInput.GetUp(_cameraRig, AirVRInput.Button.LIndexTrigger) ||
-                           AirVRInput.GetUp(_cameraRig, AirVRInput.Button.X);
-                case AirVRInput.Device.RightHandTracker:
-                    return AirVRInput.GetUp(_cameraRig, AirVRInput.Button.RIndexTrigger) ||
-                           AirVRInput.GetUp(_cameraRig, AirVRInput.Button.A);
+            switch ((AirVRInputDeviceID)_feedback.id) {
+                case AirVRInputDeviceID.LeftHandTracker:
+                    return _cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLIndexTrigger) ||
+                           _cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonX);
+                case AirVRInputDeviceID.RightHandTracker:
+                    return _cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRIndexTrigger) ||
+                           _cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonA);
                 default:
                     return false;
             }
@@ -131,23 +88,49 @@ public class AirVRPointer : MonoBehaviour {
     }
 
     public Ray GetWorldRay() {
-        switch (_inputDevice) {
-            case AirVRInput.Device.LeftHandTracker:
-                return new Ray(_cameraRig.leftHandAnchor.position, _cameraRig.leftHandAnchor.forward);
-            case AirVRInput.Device.RightHandTracker:
-                return new Ray(_cameraRig.rightHandAnchor.position, _cameraRig.rightHandAnchor.forward);
+        if (_cameraRig) {
+            switch ((AirVRInputDeviceID)_feedback.id) {
+                case AirVRInputDeviceID.LeftHandTracker:
+                    return new Ray(_cameraRig.leftHandAnchor.position, _cameraRig.leftHandAnchor.forward);
+                case AirVRInputDeviceID.RightHandTracker:
+                    return new Ray(_cameraRig.rightHandAnchor.position, _cameraRig.rightHandAnchor.forward);
+                default:
+                    break;
+            }
         }
         return new Ray();
     }
 
     public void UpdateRaycastResult(Ray ray, RaycastResult raycastResult) {
-        if (_renderOnClient == false) { return; }
+        if (_cameraRig == null || _cameraRig.renderControllersOnClient == false) { return; }
 
         if (raycastResult.isValid) {
-            AirVRInput.UpdateRaycastHitResult(_cameraRig, _inputDevice, ray.origin, raycastResult.worldPosition, raycastResult.worldNormal);
+            _lastRaycastHitOrigin = _cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(ray.origin);
+            _lastRaycastHitPosition = _cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(raycastResult.worldPosition);
+            _lastRaycastHitNormal = _cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyVector(raycastResult.worldNormal);
         }
         else {
-            AirVRInput.UpdateRaycastHitResult(_cameraRig, _inputDevice, Vector3.zero, Vector3.zero, Vector3.zero);
+            _lastRaycastHitOrigin = _lastRaycastHitPosition = _lastRaycastHitNormal = Vector3.zero;
+        }
+    }
+
+    private class Feedback : AirVRInputSender {
+        private AirVRPointer _owner;
+        private AirVRInputDeviceID _device;
+
+        public Feedback(AirVRPointer owner, AirVRInputDeviceID device) {
+            _owner = owner;
+            _device = device;
+        }
+
+        // implements AirVRInputSender
+        public override byte id => (byte)_device;
+
+        public override void PendInputsPerFrame(AirVRInputStream inputStream) {
+            if (_owner._cameraRig == null) { return; }
+
+            inputStream.PendState(this, (byte)AirVRHandTrackerFeedbackControl.RenderOnClient, _owner._cameraRig.renderControllersOnClient ? (byte)1 : (byte)0);
+            inputStream.PendRaycastHit(this, (byte)AirVRHandTrackerFeedbackControl.RaycastHit, _owner._lastRaycastHitOrigin, _owner._lastRaycastHitPosition, _owner._lastRaycastHitNormal);
         }
     }
 }

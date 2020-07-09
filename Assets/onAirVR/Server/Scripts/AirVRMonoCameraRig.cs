@@ -23,7 +23,9 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
     }
 
     public Ray ScreenTouchToRay(AirVRInput.Touch touch) {
-        var viewportPos = new Vector3(touch.position.x + 0.5f, touch.position.y + 0.5f, 0.0f);
+        var viewportPos = new Vector3((touch.position.x + 1.0f) / 2.0f, 
+                                      (touch.position.y + 1.0f) / 2.0f, 
+                                      0.0f);
         return camera.ViewportPointToRay(viewportPos);
     }
 
@@ -50,11 +52,6 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
         if (updateCamera) {
             _cameras[0] = _cameraAnchor.GetComponent<Camera>();
         }
-    }
-
-    protected override void init() {
-        inputStream.AddInputDevice(new AirVRHeadTrackerInputDevice());
-        inputStream.AddInputDevice(new AirVRScreenTouchInputDevice());
     }
 
     protected override void setupCamerasOnBound(AirVRClientConfig config) {
@@ -97,21 +94,8 @@ public sealed class AirVRMonoCameraRig : AirVRCameraRig {
         _cameraAnchor.localPosition = centerEyePosition;
     }
 
-    internal override Matrix4x4 clientSpaceToWorldMatrix {
-        get {
-            return _thisTransform.localToWorldMatrix;
-        }
-    }
-
-    internal override Transform headPose {
-        get {
-            return _cameras != null ? _cameras[0].transform : null;
-        }
-    }
-
-    internal override Camera[] cameras {
-        get {
-            return _cameras;
-        }
-    }
+    internal override bool raycastGraphic => false;
+    internal override Matrix4x4 clientSpaceToWorldMatrix => _thisTransform.localToWorldMatrix;
+    internal override Transform headPose => _cameras != null ? _cameras[0].transform : null;
+    internal override Camera[] cameras => _cameras;
 }

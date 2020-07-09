@@ -50,8 +50,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     [DllImport(AirVRServerPlugin.Name)]
     private static extern void ocs_Disconnect(int playerID);
 
-    private Vector3 _cameraPosition = Vector3.zero;
-    private Quaternion _cameraOrientation = Quaternion.identity;
+    private Pose _cameraPose = Pose.identity;
     private AirVRClientConfig _config;
     private bool _mediaStreamJustStopped;
     private int _viewNumber;
@@ -107,9 +106,9 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
         playerID = InvalidPlayerID;
 
-        inputStream = new AirVRServerInputStream() {
-            owner = this
-        };
+        inputStream = new AirVRServerInputStream(this);
+
+        onAwake();
     }
 
     private void Start() {
@@ -118,7 +117,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
             return;
         }
 
-        init();
+        onStart();
     }
 
     private void Update() {
@@ -130,18 +129,18 @@ public abstract class AirVRCameraRig : MonoBehaviour {
 
     // Events called by AirVRCameraRigManager to guarantee the update execution order
     internal void OnUpdate() {
-        inputStream.UpdateReceivers();
+        inputStream.UpdateInputFrame();
     }
 
     internal void OnLateUpdate() {
         if (mediaStream != null && _mediaStreamJustStopped == false && _encodeVideoFrameRequested) {
             Assert.IsTrue(isBoundToClient);
 
-            long timestamp = inputStream.timestamp;
-            inputStream.GetTransform(AirVRInputDeviceName.HeadTracker, (byte)AirVRHeadTrackerKey.Transform, ref _cameraPosition, ref _cameraOrientation);
+            long timestamp = inputStream.inputRecvTimestamp;
+            _cameraPose = inputStream.GetPose((byte)AirVRInputDeviceID.HeadTracker, (byte)AirVRHeadTrackerControl.Pose);
 
-            ocs_GetViewNumber(playerID, timestamp, _cameraOrientation.x, _cameraOrientation.y, _cameraOrientation.z, _cameraOrientation.w, out _viewNumber);
-            updateCameraTransforms(_config, _cameraPosition, _cameraOrientation);
+            ocs_GetViewNumber(playerID, timestamp, _cameraPose.rotation.x, _cameraPose.rotation.y, _cameraPose.rotation.z, _cameraPose.rotation.w, out _viewNumber);
+            updateCameraTransforms(_config, _cameraPose.position, _cameraPose.rotation);
             updateControllerTransforms(_config);
 
             mediaStream.GetNextFramebufferTexturesAsRenderTargets(cameras);
@@ -185,14 +184,6 @@ public abstract class AirVRCameraRig : MonoBehaviour {
             }
             else if (serverMessage.Name.Equals(AirVRServerMessage.NameCleanupUp)) {
                 onAirVRMediaStreamCleanedUp(serverMessage);
-            }
-        }
-        else if (serverMessage.IsInputStreamEvent()) {
-            if (serverMessage.Name.Equals(AirVRServerMessage.NameRemoteInputDeviceRegistered)) {
-                onAirVRInputStreamRemoteInputDeviceRegistered(serverMessage);
-            }
-            else if (serverMessage.Name.Equals(AirVRServerMessage.NameRemoteInputDeviceUnregistered)) {
-                onAirVRInputStreamRemoteInputDeviceUnregistered(serverMessage);
             }
         }
     }
@@ -250,16 +241,6 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         }
     }
 
-    private void onAirVRInputStreamRemoteInputDeviceRegistered(AirVRServerMessage message) {
-        Assert.IsTrue(string.IsNullOrEmpty(message.DeviceName) == false);
-
-        inputStream.HandleRemoteInputDeviceRegistered(message.DeviceName, (byte)message.DeviceID);
-    }
-
-    private void onAirVRInputStreamRemoteInputDeviceUnregistered(AirVRServerMessage message) {
-        inputStream.HandleRemoteInputDeviceUnregistered((byte)message.DeviceID);
-    }
-
     private IEnumerator CallPluginEndOfFrame() {
         yield return new WaitForEndOfFrame();
 
@@ -294,7 +275,8 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     }
 
     protected abstract void ensureGameObjectIntegrity();
-    protected virtual void init() { }
+    protected virtual void onAwake() { }
+    protected virtual void onStart() { }
     protected abstract void setupCamerasOnBound(AirVRClientConfig config);
     protected virtual void onStartRender() { }
     protected virtual void onStopRender() { }
@@ -313,10 +295,9 @@ public abstract class AirVRCameraRig : MonoBehaviour {
         }
     }
 
+    internal abstract bool raycastGraphic { get; }
     internal abstract Matrix4x4 clientSpaceToWorldMatrix { get; }
-
     internal abstract Transform headPose { get; }
-
     internal abstract Camera[] cameras { get; }
 
     internal void BindPlayer(int playerID) {
@@ -352,7 +333,7 @@ public abstract class AirVRCameraRig : MonoBehaviour {
     internal void PreHandOverStreams() {
         Assert.IsTrue(isBoundToClient);
 
-        inputStream.DisableAllRaycastHitFeedbacks();
+        // do nothing
     }
 
     internal void PostHandOverStreams() {

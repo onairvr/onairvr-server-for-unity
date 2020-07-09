@@ -13,14 +13,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.EventHandler {
-    private bool _sceneBeingUnloaded;
-
     public AudioSource music;
-
-    private IEnumerator loadScene(string sceneName) {
-        yield return StartCoroutine(AirVRCameraFade.FadeAllCameras(this, false, 0.5f));
-        SceneManager.LoadScene(sceneName);
-    }
 
     void Awake() {
         AirVRCameraRigManager.managerOnCurrentScene.Delegate = this;

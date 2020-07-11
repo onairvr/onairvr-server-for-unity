@@ -17,39 +17,89 @@ public enum AirVRClientType {
 
 [Serializable]
 public class AirVRClientConfig {
-	public AirVRClientConfig() {
-        LeftEyeCameraNearPlane = new float[4];
+    public struct PhysicalCameraProps {
+        public Vector2 sensorSize;
+        public float focalLength;
+        public Vector2 lensShift;
+
+        public Vector2 leftLensShift {
+            get {
+                return lensShift;
+            }
+        }
+
+        public Vector2 rightLensShift {
+            get {
+                var result = lensShift;
+                result.x = -result.x;
+
+                return result;
+            }
+        }
+
+        public float aspect {
+            get {
+                return sensorSize.x / sensorSize.y;
+            }
+        }
+    }
+
+    internal static Matrix4x4 CalcCameraProjectionMatrix(float[] projection, float near, float far) {
+        float left = projection[0] * near;
+        float top = projection[1] * near;
+        float right = projection[2] * near;
+        float bottom = projection[3] * near;
+
+        Matrix4x4 result = Matrix4x4.zero;
+        result[0, 0] = 2 * near / (right - left);
+        result[1, 1] = 2 * near / (top - bottom);
+        result[0, 2] = (right + left) / (right - left);
+        result[1, 2] = (top + bottom) / (top - bottom);
+        result[2, 2] = (near + far) / (near - far);
+        result[2, 3] = 2 * near * far / (near - far);
+        result[3, 2] = -1.0f;
+
+        return result;
+    }
+
+    internal static PhysicalCameraProps CalcPhysicalCameraProps(float[] projection) {
+        var result = new PhysicalCameraProps();
+        result.sensorSize = new Vector2(projection[2] - projection[0],
+                                        projection[1] - projection[3]);
+        result.focalLength = 1;
+        result.lensShift = new Vector2((projection[2] + projection[0]) / 2 / (projection[2] - projection[0]),
+                                       (projection[1] + projection[3]) / 2 / (projection[1] - projection[3]));
+        return result;
+    }
+
+    public AirVRClientConfig() {
+        CameraProjection = new float[4];
     }
 
     [SerializeField] protected string UserID;
     [SerializeField] protected bool Stereoscopy;
     [SerializeField] protected int VideoWidth;
     [SerializeField] protected int VideoHeight;
-    [SerializeField] protected float[] LeftEyeCameraNearPlane;
+    [SerializeField] protected float[] CameraProjection;
     [SerializeField] protected float FrameRate;
     [SerializeField] protected float InterpupillaryDistance;
     [SerializeField] protected Vector3 EyeCenterPosition;
 
-    private Matrix4x4 makeProjection(float l, float t, float r, float b, float n, float f) {
-        Matrix4x4 result = Matrix4x4.zero;
-        result[0, 0] = 2 * n / (r - l);
-        result[1, 1] = 2 * n / (t - b);
-        result[0, 2] = (r + l) / (r - l);
-        result[1, 2] = (t + b) / (t - b);
-        result[2, 2] = (n + f) / (n - f);
-        result[2, 3] = 2 * n * f / (n - f);
-        result[3, 2] = -1.0f;
+    internal Matrix4x4 GetCameraProjectionMatrix(float near, float far) {
+        if (isCameraProjectionValid(CameraProjection) == false) { return Matrix4x4.zero; }
 
-        return result;
+        return CalcCameraProjectionMatrix(CameraProjection, near, far);
     }
 
     internal Matrix4x4 GetLeftEyeCameraProjection(float near, float far) {
-        return makeProjection(LeftEyeCameraNearPlane[0] * near, LeftEyeCameraNearPlane[1] * near, LeftEyeCameraNearPlane[2] * near, LeftEyeCameraNearPlane[3] * near, near, far);
+        return GetCameraProjectionMatrix(near, far);
     }
 
     internal Matrix4x4 GetRightEyeCameraProjection(float near, float far) {
-        Matrix4x4 result = GetLeftEyeCameraProjection(near, far);
-        result[0, 2] *= -1.0f;
+        Matrix4x4 result = GetCameraProjectionMatrix(near, far);
+        if (result != Matrix4x4.zero) {
+            result[0, 2] *= -1.0f;
+        }
         return result;
     }
 
@@ -73,16 +123,15 @@ public class AirVRClientConfig {
 
     public float framerate {
         get {
-
-            return Mathf.Min(FrameRate, AirVRServer.serverParams.MaxFrameRate);
+            return FrameRate;
         }
     }
 
     public float fov {
         get {
-            float tAngle = Mathf.Atan(Mathf.Abs(LeftEyeCameraNearPlane[1]));
-            float bAngle = Mathf.Atan(Mathf.Abs(LeftEyeCameraNearPlane[3]));
-            return Mathf.Rad2Deg * (tAngle * Mathf.Sign(LeftEyeCameraNearPlane[1]) - bAngle * Mathf.Sign(LeftEyeCameraNearPlane[3]));
+            float tAngle = Mathf.Atan(Mathf.Abs(CameraProjection[1]));
+            float bAngle = Mathf.Atan(Mathf.Abs(CameraProjection[3]));
+            return Mathf.Rad2Deg * (tAngle * Mathf.Sign(CameraProjection[1]) - bAngle * Mathf.Sign(CameraProjection[3]));
         }
     }
 
@@ -102,5 +151,15 @@ public class AirVRClientConfig {
         get {
             return UserID;
         }
+    }
+
+    public PhysicalCameraProps physicalCameraProps {
+        get {
+            return CalcPhysicalCameraProps(CameraProjection);
+        }
+    }
+
+    private bool isCameraProjectionValid(float[] projection) {
+        return projection[2] - projection[0] > 0 && projection[1] - projection[3] > 0;
     }
 }

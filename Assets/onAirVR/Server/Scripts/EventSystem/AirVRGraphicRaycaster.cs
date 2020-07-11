@@ -63,7 +63,6 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
     private List<RaycastHit> _raycastResults = new List<RaycastHit>();
 
     [System.NonSerialized] private Canvas _canvas;
-    [SerializeField] private AirVRPointer _pointer = null;
 
     private Canvas canvas {
         get {
@@ -72,12 +71,6 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
             }
             _canvas = GetComponent<Canvas>();
             return _canvas;
-        }
-    }
-
-    public AirVRPointer pointer {
-        get {
-            return _pointer;
         }
     }
 
@@ -185,21 +178,21 @@ public class AirVRGraphicRaycaster : GraphicRaycaster {
         return eventCamera.WorldToScreenPoint(raycastResult.worldPosition);
     }
 
-    // overrides GraphicRaycaster
-    public override Camera eventCamera {
-        get {
-            return _pointer.cameraRig.cameras[0];
+    public void Raycast(AirVRPointer pointer, PointerEventData eventData, List<RaycastResult> resultAppendList) {
+        if (eventData.IsVRPointer() == false) {
+            base.Raycast(eventData, resultAppendList);
+            return;
+        }
+
+        if (pointer.interactable) {
+            raycast(eventData, resultAppendList, eventData.GetRay(), true);
         }
     }
 
-    public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList) {
-        if (eventData.IsVRPointer()) {
-            if (_pointer.interactable) {
-                raycast(eventData, resultAppendList, eventData.GetRay(), true);
-            }
-        }
-        else {
-            base.Raycast(eventData, resultAppendList);
+    // overrides GraphicRaycaster
+    public override Camera eventCamera {
+        get {
+            return AirVRPointer.pointers[0].cameraRig.cameras[0];
         }
     }
 }

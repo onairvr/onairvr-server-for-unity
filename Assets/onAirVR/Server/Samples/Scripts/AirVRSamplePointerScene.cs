@@ -10,26 +10,46 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
-public class AirVRSamplePointerScene : MonoBehaviour {
-    private const string BasicSampleSceneName = "A. Basic";
+public class AirVRSamplePointerScene : MonoBehaviour {   
+    private AirVRStereoCameraRig _stereoCameraRig;
+    private Button _button;
+    private Image _indicator;
+    private float _remainingToStopIndicating = -1.0f;
 
-    private bool _loadingBasicScene;
+    [SerializeField] private AnimationCurve _vibration = null;
 
-    private IEnumerator loadScene(string sceneName) {
-        yield return StartCoroutine(AirVRCameraFade.FadeAllCameras(this, false, 0.5f));
-        SceneManager.LoadScene(sceneName);
+    private void Awake() {
+        _stereoCameraRig = FindObjectOfType<AirVRStereoCameraRig>();
+
+        _button = transform.Find("Canvas/Panel/Button").GetComponent<Button>();
+        _indicator = transform.Find("Canvas/Panel/Indicator").GetComponent<Image>();
+
+        _indicator.gameObject.SetActive(false);
     }
 
-    IEnumerator Start() {
+    private IEnumerator Start() {
+        _button.onClick.AddListener(() => {
+            _remainingToStopIndicating = _vibration.keys[_vibration.keys.Length - 1].time;
+            _indicator.gameObject.SetActive(true);
+
+            AirVRInput.SetVibration(_stereoCameraRig, AirVRInput.Device.RightHandTracker, _vibration, _vibration);
+        });
+
         yield return StartCoroutine(AirVRCameraFade.FadeAllCameras(this, true, 0.5f));
     }
 
-    public void GoToBasicScene() {
-        if (_loadingBasicScene == false) {
-            _loadingBasicScene = true;
+    private void Update() {
+        updateIndicator();
+    }
 
-            StartCoroutine(loadScene(BasicSampleSceneName));
+    private void updateIndicator() {
+        if (_remainingToStopIndicating <= 0.0f) { return; }
+
+        _remainingToStopIndicating -= Time.deltaTime;
+        if (_remainingToStopIndicating <= 0.0f) {
+            _indicator.gameObject.SetActive(false);
         }
     }
 }

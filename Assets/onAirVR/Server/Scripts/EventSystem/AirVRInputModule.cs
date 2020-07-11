@@ -309,9 +309,10 @@ public class AirVRInputModule : PointerInputModule {
                 raycaster.Raycast(eventData, raycastResults);
             }
         }
-        foreach (var raycaster in AirVRGraphicRaycaster.GetAllRaycasters()) {
-            if (raycaster.pointer == pointer) {
-                raycaster.Raycast(eventData, raycastResults);
+
+        if (pointer.cameraRig.raycastGraphic) {
+            foreach (var raycaster in AirVRGraphicRaycaster.GetAllRaycasters()) {
+                raycaster.Raycast(pointer, eventData, raycastResults);
             }
         }
 

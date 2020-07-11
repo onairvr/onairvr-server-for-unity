@@ -11,15 +11,14 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 public static class AirVRInput {
-    public enum Device {
-        HeadTracker,
-        LeftHandTracker,
-        RightHandTracker,
-        Controller
+    public enum Device : byte {
+        HeadTracker = AirVRInputDeviceID.HeadTracker,
+        LeftHandTracker = AirVRInputDeviceID.LeftHandTracker,
+        RightHandTracker = AirVRInputDeviceID.RightHandTracker,
+        Controller = AirVRInputDeviceID.Controller
     }
 
     public enum Axis2D {
-        Touchpad,
         LThumbstick,
         RThumbstick
     }
@@ -31,16 +30,11 @@ public static class AirVRInput {
         RHandTrigger
     }
 
-    public enum Touch {
-        Touchpad
-    }
-
     public enum Button {
-        Touchpad,
-        Up,
-        Down,
-        Left,
-        Right,
+        LIndexTrigger,
+        RIndexTrigger,
+        LHandTrigger,
+        RHandTrigger,
         A,
         B,
         X,
@@ -49,12 +43,6 @@ public static class AirVRInput {
         Back,
         LThumbstick,
         RThumbstick,
-        LShoulder,
-        RShoulder,
-        LIndexTrigger,
-        RIndexTrigger,
-        LHandTrigger,
-        RHandTrigger,
         LThumbstickUp,
         LThumbstickDown,
         LThumbstickLeft,
@@ -65,255 +53,286 @@ public static class AirVRInput {
         RThumbstickRight
     }
 
-    private static byte parseControlID(Axis2D axis) {
-        switch (axis) {
-            case Axis2D.Touchpad:
-                return (byte)AirVRControllerKey.ExtAxis2DTouchpad;
-            case Axis2D.LThumbstick:
-                return (byte)AirVRControllerKey.Axis2DLThumbstick;
-            case Axis2D.RThumbstick:
-                return (byte)AirVRControllerKey.Axis2DRThumbstick;
-        }
-        Assert.IsTrue(false);
-        return 0;
-    }
-
-    private static byte parseControlID(Axis axis) {
-        switch (axis) {
-            case Axis.LIndexTrigger:
-                return (byte)AirVRControllerKey.AxisLIndexTrigger;
-            case Axis.RIndexTrigger:
-                return (byte)AirVRControllerKey.AxisRIndexTrigger;
-            case Axis.LHandTrigger:
-                return (byte)AirVRControllerKey.AxisLHandTrigger;
-            case Axis.RHandTrigger:
-                return (byte)AirVRControllerKey.AxisRHandTrigger;
-        }
-        Assert.IsTrue(false);
-        return 0;
-    }
-
-    private static byte parseControlID(Touch touch) {
-        switch (touch) {
-            case Touch.Touchpad:
-                return (byte)AirVRControllerKey.ExtTouchTouchpad;
-        }
-        Assert.IsTrue(false);
-        return 0;
-    }
-
-    private static byte parseControlID(Button button) {
-        switch (button) {
-            case Button.Touchpad:
-                return (byte)AirVRControllerKey.ButtonTouchpad;
-            case Button.Up:
-                return (byte)AirVRControllerKey.ButtonUp;
-            case Button.Down:
-                return (byte)AirVRControllerKey.ButtonDown;
-            case Button.Left:
-                return (byte)AirVRControllerKey.ButtonLeft;
-            case Button.Right:
-                return (byte)AirVRControllerKey.ButtonRight;
-            case Button.A:
-                return (byte)AirVRControllerKey.ButtonA;
-            case Button.B:
-                return (byte)AirVRControllerKey.ButtonB;
-            case Button.X:
-                return (byte)AirVRControllerKey.ButtonX;
-            case Button.Y:
-                return (byte)AirVRControllerKey.ButtonY;
-            case Button.Start:
-                return (byte)AirVRControllerKey.ButtonStart;
-            case Button.Back:
-                return (byte)AirVRControllerKey.ButtonBack;
-            case Button.LThumbstick:
-                return (byte)AirVRControllerKey.ButtonLThumbstick;
-            case Button.RThumbstick:
-                return (byte)AirVRControllerKey.ButtonRThumbstick;
-            case Button.LShoulder:
-                return (byte)AirVRControllerKey.ButtonLShoulder;
-            case Button.RShoulder:
-                return (byte)AirVRControllerKey.ButtonRShoulder;
-            case Button.LIndexTrigger:
-                return (byte)AirVRControllerKey.ExtButtonLIndexTrigger;
-            case Button.RIndexTrigger:
-                return (byte)AirVRControllerKey.ExtButtonRIndexTrigger;
-            case Button.LHandTrigger:
-                return (byte)AirVRControllerKey.ExtButtonLHandTrigger;
-            case Button.RHandTrigger:
-                return (byte)AirVRControllerKey.ExtButtonRHandTrigger;
-            case Button.LThumbstickUp:
-                return (byte)AirVRControllerKey.ExtButtonLThumbstickUp;
-            case Button.LThumbstickDown:
-                return (byte)AirVRControllerKey.ExtButtonLThumbstickDown;
-            case Button.LThumbstickLeft:
-                return (byte)AirVRControllerKey.ExtButtonLThumbstickLeft;
-            case Button.LThumbstickRight:
-                return (byte)AirVRControllerKey.ExtButtonLThumbstickRight;
-            case Button.RThumbstickUp:
-                return (byte)AirVRControllerKey.ExtButtonRThumbstickUp;
-            case Button.RThumbstickDown:
-                return (byte)AirVRControllerKey.ExtButtonRThumbstickDown;
-            case Button.RThumbstickLeft:
-                return (byte)AirVRControllerKey.ExtButtonRThumbstickLeft;
-            case Button.RThumbstickRight:
-                return (byte)AirVRControllerKey.ExtButtonRThumbstickRight;
-        }
-        Assert.IsTrue(false);
-        return 0;
-    }
-
-    private static string deviceName(Device device) {
-        switch (device) {
-            case Device.HeadTracker:
-                return AirVRInputDeviceName.HeadTracker;
-            case Device.LeftHandTracker:
-                return AirVRInputDeviceName.LeftHandTracker;
-            case Device.RightHandTracker:
-                return AirVRInputDeviceName.RightHandTracker;
-            case Device.Controller:
-                return AirVRInputDeviceName.Controller;
-        }
-        Assert.IsTrue(false);
-        return "";
-    }
-
-    private static bool isTrackedDevice(Device device) {
-        return device == Device.HeadTracker || device == Device.LeftHandTracker || device == Device.RightHandTracker;
-    }
-
-    private static byte transformControlID(Device device) {
-        switch (device) {
-            case Device.HeadTracker:
-                return (byte)AirVRHeadTrackerKey.Transform;
-            case Device.LeftHandTracker:
-                return (byte)AirVRLeftHandTrackerKey.Transform;
-            case Device.RightHandTracker:
-                return (byte)AirVRRightHandTrackerKey.Transform;
-        }
-        Assert.IsTrue(false);
-        return 0;
-    }
-
-    private static byte feedbackRaycastHitResultControlID(Device device) {
-        switch (device) {
-            case Device.HeadTracker:
-                return (byte)AirVRHeadTrackerKey.RaycastHitResult;
-            case Device.LeftHandTracker:
-                return (byte)AirVRLeftHandTrackerKey.RaycastHitResult;
-            case Device.RightHandTracker:
-                return (byte)AirVRRightHandTrackerKey.RaycastHitResult;
-        }
-        Assert.IsTrue(false);
-        return 0;
-    }
-
-    private static void GetTransform(AirVRCameraRig cameraRig, string deviceName, byte controlID, ref Vector3 worldPosition, ref Quaternion worldOrientation) {
-        Vector3 position = Vector3.zero;
-        Quaternion orientation = Quaternion.identity;
-
-        cameraRig.inputStream.GetTransform(deviceName, controlID, ref position, ref orientation);
-
-        worldPosition = cameraRig.clientSpaceToWorldMatrix.MultiplyPoint(position);
-        worldOrientation = Quaternion.LookRotation(cameraRig.clientSpaceToWorldMatrix.GetColumn(2), cameraRig.clientSpaceToWorldMatrix.GetColumn(1)) * orientation;
-    }
-
-    private static Vector2 GetAxis2D(AirVRCameraRig cameraRig, string deviceName, byte controlID) {
-        return cameraRig.inputStream.GetAxis2D(deviceName, controlID);
-    }
-
-    private static float GetAxis(AirVRCameraRig cameraRig, string deviceName, byte controlID) {
-        return cameraRig.inputStream.GetAxis(deviceName, controlID);
-    }
-
-    private static bool GetButton(AirVRCameraRig cameraRig, string deviceName, byte controlID) {
-        return cameraRig.inputStream.GetButton(deviceName, controlID);
-    }
-
-    private static bool GetButtonDown(AirVRCameraRig cameraRig, string deviceName, byte controlID) {
-        return cameraRig.inputStream.GetButtonDown(deviceName, controlID);
-    }
-
-    private static bool GetButtonUp(AirVRCameraRig cameraRig, string deviceName, byte controlID) {
-        return cameraRig.inputStream.GetButtonUp(deviceName, controlID);
-    }
-
     public static bool IsDeviceAvailable(AirVRCameraRig cameraRig, Device device) {
-        return cameraRig.inputStream.CheckIfInputDeviceAvailable(deviceName(device));
+        switch (device) {
+            case Device.HeadTracker:
+                return true;
+            case Device.LeftHandTracker:
+            case Device.RightHandTracker:
+                return cameraRig.inputStream.GetState((byte)device, (byte)AirVRHandTrackerControl.Status) != 0;
+            default:
+                return false;
+        }
     }
 
     public static Vector2 Get(AirVRCameraRig cameraRig, Axis2D axis) {
-        return GetAxis2D(cameraRig, AirVRInputDeviceName.Controller, parseControlID(axis));
+        switch (axis) {
+            case Axis2D.LThumbstick:
+                return cameraRig.inputStream.GetAxis2D((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick);
+            case Axis2D.RThumbstick:
+                return cameraRig.inputStream.GetAxis2D((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick);
+            default:
+                return Vector2.zero;
+        }
     }
 
     public static float Get(AirVRCameraRig cameraRig, Axis axis) {
-        return GetAxis(cameraRig, AirVRInputDeviceName.Controller, parseControlID(axis));
-    }
-
-    public static bool Get(AirVRCameraRig cameraRig, Touch touch) {
-        return GetButton(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touch));
+        switch (axis) {
+            case Axis.LIndexTrigger:
+                return cameraRig.inputStream.GetAxis((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLIndexTrigger);
+            case Axis.RIndexTrigger:
+                return cameraRig.inputStream.GetAxis((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRIndexTrigger);
+            case Axis.LHandTrigger:
+                return cameraRig.inputStream.GetAxis((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLHandTrigger);
+            case Axis.RHandTrigger:
+                return cameraRig.inputStream.GetAxis((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRHandTrigger);
+            default:
+                return 0;
+        }
     }
 
     public static bool Get(AirVRCameraRig cameraRig, Button button) {
-        return GetButton(cameraRig, AirVRInputDeviceName.Controller, parseControlID(button));
-    }
-
-    public static bool GetDown(AirVRCameraRig cameraRig, Touch touch) {
-        return GetButtonDown(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touch));
+        switch (button) {
+            case Button.LIndexTrigger:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLIndexTrigger);
+            case Button.RIndexTrigger:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRIndexTrigger);
+            case Button.LHandTrigger:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLHandTrigger);
+            case Button.RHandTrigger:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRHandTrigger);
+            case Button.A:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonA);
+            case Button.B:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonB);
+            case Button.X:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonX);
+            case Button.Y:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonY);
+            case Button.Start:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonStart);
+            case Button.Back:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonBack);
+            case Button.LThumbstick:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonLThumbstick);
+            case Button.RThumbstick:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonRThumbstick);
+            case Button.LThumbstickUp:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Up);
+            case Button.LThumbstickDown:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Down);
+            case Button.LThumbstickLeft:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Left);
+            case Button.LThumbstickRight:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Right);
+            case Button.RThumbstickUp:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Up);
+            case Button.RThumbstickDown:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Down);
+            case Button.RThumbstickLeft:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Left);
+            case Button.RThumbstickRight:
+                return cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Right);
+            default:
+                return false;
+        }
     }
 
     public static bool GetDown(AirVRCameraRig cameraRig, Button button) {
-        return GetButtonDown(cameraRig, AirVRInputDeviceName.Controller, parseControlID(button));
-    }
-
-    public static bool GetUp(AirVRCameraRig cameraRig, Touch touch) {
-        return GetButtonUp(cameraRig, AirVRInputDeviceName.Controller, parseControlID(touch));
+        switch (button) {
+            case Button.LIndexTrigger:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLIndexTrigger);
+            case Button.RIndexTrigger:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRIndexTrigger);
+            case Button.LHandTrigger:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLHandTrigger);
+            case Button.RHandTrigger:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRHandTrigger);
+            case Button.A:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonA);
+            case Button.B:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonB);
+            case Button.X:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonX);
+            case Button.Y:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonY);
+            case Button.Start:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonStart);
+            case Button.Back:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonBack);
+            case Button.LThumbstick:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonLThumbstick);
+            case Button.RThumbstick:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonRThumbstick);
+            case Button.LThumbstickUp:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Up);
+            case Button.LThumbstickDown:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Down);
+            case Button.LThumbstickLeft:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Left);
+            case Button.LThumbstickRight:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Right);
+            case Button.RThumbstickUp:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Up);
+            case Button.RThumbstickDown:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Down);
+            case Button.RThumbstickLeft:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Left);
+            case Button.RThumbstickRight:
+                return cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Right);
+            default:
+                return false;
+        }
     }
 
     public static bool GetUp(AirVRCameraRig cameraRig, Button button) {
-        return GetButtonUp(cameraRig, AirVRInputDeviceName.Controller, parseControlID(button));
-    }
-    
-    public static bool IsDeviceFeedbackEnabled(AirVRCameraRig cameraRig, Device device) {
-        return cameraRig.inputStream.IsDeviceFeedbackEnabled(deviceName(device));
-    }
-
-    public static void EnableTrackedDeviceFeedback(AirVRCameraRig cameraRig, Device device, Texture2D cookieTexture, float depthScaleMultiplier) {
-        if (isTrackedDevice(device) == false) {
-            return;
+        switch (button) {
+            case Button.LIndexTrigger:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLIndexTrigger);
+            case Button.RIndexTrigger:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRIndexTrigger);
+            case Button.LHandTrigger:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisLHandTrigger);
+            case Button.RHandTrigger:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.AxisRHandTrigger);
+            case Button.A:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonA);
+            case Button.B:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonB);
+            case Button.X:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonX);
+            case Button.Y:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonY);
+            case Button.Start:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonStart);
+            case Button.Back:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonBack);
+            case Button.LThumbstick:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonLThumbstick);
+            case Button.RThumbstick:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.ButtonRThumbstick);
+            case Button.LThumbstickUp:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Up);
+            case Button.LThumbstickDown:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Down);
+            case Button.LThumbstickLeft:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Left);
+            case Button.LThumbstickRight:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DLThumbstick, AirVRInputDirection.Right);
+            case Button.RThumbstickUp:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Up);
+            case Button.RThumbstickDown:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Down);
+            case Button.RThumbstickLeft:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Left);
+            case Button.RThumbstickRight:
+                return cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.Controller, (byte)AirVRControllerControl.Axis2DRThumbstick, AirVRInputDirection.Right);
+            default:
+                return false;
         }
-        
-        cameraRig.inputStream.EnableTrackedDeviceFeedback(deviceName(device), cookieTexture, depthScaleMultiplier);
     }
 
-    public static void DisableDeviceFeedback(AirVRCameraRig cameraRig, Device device) {
-        cameraRig.inputStream.DisableDeviceFeedback(deviceName(device));
+    public static void SetVibration(AirVRCameraRig cameraRig, Device device, float frequency, float amplitude) {
+        switch (device) {
+            case Device.LeftHandTracker:
+                cameraRig.inputStream.PendVibration((byte)AirVRInputDeviceID.LeftHandTracker, (byte)AirVRHandTrackerFeedbackControl.Vibration, frequency, amplitude);
+                break;
+            case Device.RightHandTracker:
+                cameraRig.inputStream.PendVibration((byte)AirVRInputDeviceID.RightHandTracker, (byte)AirVRHandTrackerFeedbackControl.Vibration, frequency, amplitude);
+                break;
+        }
     }
 
-    public static void GetTrackedDevicePositionAndOrientation(AirVRCameraRig cameraRig, Device device, out Vector3 worldPosition, out Quaternion worldOrientation) {
-        if (isTrackedDevice(device) == false) {
-            worldPosition = cameraRig.headPose.position;
-            worldOrientation = cameraRig.headPose.rotation; 
-            return;
+    public static void SetVibration(AirVRCameraRig cameraRig, Device device, AnimationCurve frequency, AnimationCurve amplitude) {
+        switch (device) {
+            case Device.LeftHandTracker:
+                renderVibration(cameraRig, (byte)AirVRInputDeviceID.LeftHandTracker, (byte)AirVRHandTrackerFeedbackControl.Vibration, frequency, amplitude);
+                break;
+            case Device.RightHandTracker:
+                renderVibration(cameraRig, (byte)AirVRInputDeviceID.RightHandTracker, (byte)AirVRHandTrackerFeedbackControl.Vibration, frequency, amplitude);
+                break;
+        }
+    }
+
+    public static int GetScreenTouchCount(AirVRCameraRig cameraRig) {
+        var count = 0;
+        for (byte control = (byte)AirVRTouchScreenControl.TouchIndexStart; control <= (byte)AirVRTouchScreenControl.TouchIndexEnd; control++) {
+            if (cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.TouchScreen, control) ||
+                cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.TouchScreen, control)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public static Touch GetScreenTouch(AirVRCameraRig cameraRig, int index) {
+        var i = 0;
+        for (byte control = (byte)AirVRTouchScreenControl.TouchIndexStart; control <= (byte)AirVRTouchScreenControl.TouchIndexEnd; control++) {
+            if (cameraRig.inputStream.IsActive((byte)AirVRInputDeviceID.TouchScreen, control) == false &&
+                cameraRig.inputStream.GetDeactivated((byte)AirVRInputDeviceID.TouchScreen, control) == false) {
+                continue;
+            }
+
+            if (i == index) {
+                Touch touch = new Touch();
+                touch.fingerID = control;
+
+                byte state = 0;
+                cameraRig.inputStream.GetTouch2D((byte)AirVRInputDeviceID.TouchScreen, control, ref touch.position, ref state);
+
+                if (cameraRig.inputStream.GetActivated((byte)AirVRInputDeviceID.TouchScreen, control)) {
+                    touch.phase = TouchPhase.Began;
+                }
+                else {
+                    switch ((AirVRTouchPhase)state) {
+                        case AirVRTouchPhase.Ended:
+                            touch.phase = TouchPhase.Ended;
+                            break;
+                        case AirVRTouchPhase.Canceled:
+                            touch.phase = TouchPhase.Canceled;
+                            break;
+                        case AirVRTouchPhase.Stationary:
+                            touch.phase = TouchPhase.Stationary;
+                            break;
+                        case AirVRTouchPhase.Moved:
+                            touch.phase = TouchPhase.Moved;
+                            break;
+                        default:
+                            Assert.IsTrue(false);
+                            break;
+                    }
+                }
+
+                return touch;
+            }
+            else {
+                i++;
+            }
+        }
+        return new Touch { fingerID = Touch.InvalidFingerID };
+    }
+
+    private static void renderVibration(AirVRCameraRig cameraRig, byte device, byte control, AnimationCurve frequency, AnimationCurve amplitude) {
+        var fps = cameraRig.GetConfig().framerate;
+        var duration = Mathf.Max(frequency.keys[frequency.keys.Length - 1].time, amplitude.keys[amplitude.keys.Length - 1].time);
+
+        for (float t = 0.0f; t < duration; t += 1.0f / fps) {
+            cameraRig.inputStream.PendVibration(device, control, frequency.Evaluate(t), amplitude.Evaluate(t));
         }
 
-        Vector3 pos = Vector3.zero;
-        Quaternion rot = Quaternion.identity;
-
-        GetTransform(cameraRig, deviceName(device), transformControlID(device), ref pos, ref rot);
-
-        worldPosition = pos;
-        worldOrientation = rot;
+        // make sure to end with no vibration
+        cameraRig.inputStream.PendVibration(device, control, 0, 0);
     }
 
-    public static void FeedbackTrackedDevice(AirVRCameraRig cameraRig, Device device, Vector3 worldRayOrigin, Vector3 worldHitPosition, Vector3 worldHitNormal) {
-        if (isTrackedDevice(device) == false) {
-            return;
-        }
+    public struct Touch {
+        public const int InvalidFingerID = -1;
 
-        cameraRig.inputStream.FeedbackTrackedDevice(deviceName(device), feedbackRaycastHitResultControlID(device),
-                                                    cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(worldRayOrigin),
-                                                    cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyPoint(worldHitPosition),
-                                                    cameraRig.clientSpaceToWorldMatrix.inverse.MultiplyVector(worldHitNormal));
+        public int fingerID;
+        public Vector2 position;
+        public TouchPhase phase;
+
+        public bool IsValid() {
+            return fingerID != InvalidFingerID;
+        }
     }
 }

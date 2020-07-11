@@ -16,7 +16,7 @@ public class AirVRServerMediaStream {
     private const int FramebufferCount = 3;
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_RegisterFramebufferTextures(int playerID, IntPtr[] textures, int textureCountPerFrame, int framebufferCount);
+    private static extern void ocs_RegisterFramebufferTextures(int playerID, IntPtr[] textures, int textureCountPerFrame, int framebufferCount);
 
     public AirVRServerMediaStream(int playerID, AirVRClientConfig config, int cameraCount) {
         currentFramebufferIndex = 0;
@@ -40,7 +40,7 @@ public class AirVRServerMediaStream {
             }
         }
 
-        onairvr_RegisterFramebufferTextures(playerID, framebuffers, cameraCount, FramebufferCount);
+        ocs_RegisterFramebufferTextures(playerID, framebuffers, cameraCount, FramebufferCount);
     }
 
     private RenderTexture[] _framebuffers;

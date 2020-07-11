@@ -34,6 +34,7 @@ public class AirVRServerMessage : AirVRMessage {
     // Type : Event, From : MediaStream
     public const string NameInitialized = "Initialized";
     public const string NameStarted = "Started";
+    public const string NameSetCameraProjection = "SetCameraProjection";
     public const string NameEncodeVideoFrame = "EncodeVideoFrame";
     public const string NameStopped = "Stopped";
     public const string NameCleanupUp = "CleanedUp";
@@ -72,6 +73,9 @@ public class AirVRServerMessage : AirVRMessage {
 
     // Type : Event, From : InputStream, Name : RemoteInputDeviceRegistered
     public string DeviceName;
+
+    // Type : Event, From : MediaStream, Name : SetCameraProjection
+    public float[] CameraProjection;
 
     private bool isEventFrom(string fromWhat) {
         if (string.IsNullOrEmpty(Type) || string.IsNullOrEmpty(From) || string.IsNullOrEmpty(Name)) {

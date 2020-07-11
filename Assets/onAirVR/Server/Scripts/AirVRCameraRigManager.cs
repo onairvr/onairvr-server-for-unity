@@ -14,13 +14,13 @@ using System.Runtime.InteropServices;
 
 public class AirVRCameraRigManager : MonoBehaviour {
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_AcceptPlayer(int playerID);
+    private static extern void ocs_AcceptPlayer(int playerID);
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_Update();
+    private static extern void ocs_Update();
 
     [DllImport(AirVRServerPlugin.Name)]
-    private static extern void onairvr_Disconnect(int playerID);
+    private static extern void ocs_Disconnect(int playerID);
 
     public interface EventHandler {
         void AirVRCameraRigWillBeBound(int clientHandle, AirVRClientConfig config, List<AirVRCameraRig> availables, out AirVRCameraRig selected);
@@ -90,6 +90,8 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void updateApplicationTargetFrameRate() {
+        if (AirVRServer.settings.AdaptiveFrameRate == false) { return; }
+
         List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAllRetainedCameraRigs(cameraRigs);
 
@@ -97,10 +99,10 @@ public class AirVRCameraRigManager : MonoBehaviour {
         foreach (AirVRCameraRig cameraRig in cameraRigs) {
             if (cameraRig.isStreaming) {
                 maxCameraRigVideoFrameRate = Mathf.Max(maxCameraRigVideoFrameRate, cameraRig.GetConfig().framerate);
-            }
+            } 
         }
 
-        Application.targetFrameRate = AirVRServer.GetApplicationFrameRate(maxCameraRigVideoFrameRate);
+        Application.targetFrameRate = Mathf.Max(Mathf.RoundToInt(maxCameraRigVideoFrameRate), AirVRServer.settings.MinFrameRate);
     }
 
     void Awake() {
@@ -127,7 +129,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
                 }
             }
             else {
-                onairvr_Disconnect(item.playerID);
+                ocs_Disconnect(item.playerID);
             }
         }
 
@@ -137,7 +139,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     void Update() {
-        onairvr_Update();
+        ocs_Update();
 
         _eventDispatcher.DispatchEvent();
         List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
@@ -246,10 +248,10 @@ public class AirVRCameraRigManager : MonoBehaviour {
             _cameraRigList.RetainCameraRig(selected);
             selected.BindPlayer(playerID);
 
-            onairvr_AcceptPlayer(playerID);
+            ocs_AcceptPlayer(playerID);
         }
         else {
-            onairvr_Disconnect(playerID);
+            ocs_Disconnect(playerID);
         }
     }
 

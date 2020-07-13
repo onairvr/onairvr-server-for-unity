@@ -12,7 +12,7 @@ onAirVR consists of two applications - mobile VR client app & content app on PC.
 
 Please ensure you have right hardwares :
 
-* **Oculus Mobile** device
+* **Oculus Quest**
 * **Windows** desktop powered by **NVIDIA graphics**
 
 This plugin is for PC content development, and the plugins for mobile VR platforms we supports are belows :
@@ -26,7 +26,7 @@ This plugin is for PC content development, and the plugins for mobile VR platfor
 
 You can download the pre-exported package for each version from [Releases](https://github.com/onairvr/onairvr-server-for-unity/releases).
 
-You may clone this whole project. It is worth noting that the project itself is maintained on Unity 2018.1.9f2 which is the lowest compatible version, but it is safely migrated to higher versions of Unity.
+You may clone this whole project. It is worth noting that the project itself is maintained on Unity 2018.3.14f1 which is the lowest compatible version, but it is safely migrated to higher versions of Unity.
 
 
 

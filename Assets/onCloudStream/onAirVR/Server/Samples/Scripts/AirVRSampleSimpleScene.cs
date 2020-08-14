@@ -8,11 +8,12 @@
  ***********************************************************/
 
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
 public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.EventHandler {
+    private AirVRCameraRig _lastCameraRig;
+
     public AudioSource music;
 
     void Awake() {
@@ -23,6 +24,12 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
         yield return StartCoroutine(AirVRCameraFade.FadeAllCameras(this, true, 0.5f));
     }
 
+    void Update() {
+        if (_lastCameraRig != null && AirVRInput.GetScreenTouchCount(_lastCameraRig) > 0) {
+            Debug.Log("touch count: " + AirVRInput.GetScreenTouchCount(_lastCameraRig));
+        }
+    }
+
     // implements AirVRCameraRigManager.EventHandler
     public void AirVRCameraRigWillBeBound(int clientHandle, AirVRClientConfig config, List<AirVRCameraRig> availables, out AirVRCameraRig selected) {
         selected = availables.Count > 0 ? availables[0] : null;
@@ -30,6 +37,8 @@ public class AirVRSampleSimpleScene : MonoBehaviour, AirVRCameraRigManager.Event
         if (selected) {
             music.Play();
         }
+
+        _lastCameraRig = selected;
     }
 
     public void AirVRCameraRigActivated(AirVRCameraRig cameraRig) {

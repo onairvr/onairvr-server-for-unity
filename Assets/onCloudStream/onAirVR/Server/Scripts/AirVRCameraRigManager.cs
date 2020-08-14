@@ -10,18 +10,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using System.Runtime.InteropServices;
 
 public class AirVRCameraRigManager : MonoBehaviour {
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_AcceptPlayer(int playerID);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_Update();
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_Disconnect(int playerID);
-
     public interface EventHandler {
         void AirVRCameraRigWillBeBound(int clientHandle, AirVRClientConfig config, List<AirVRCameraRig> availables, out AirVRCameraRig selected);
         void AirVRCameraRigActivated(AirVRCameraRig cameraRig);
@@ -36,7 +26,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
         if (_instanceOnCurrentScene == null) {
             _instanceOnCurrentScene = FindObjectOfType<AirVRCameraRigManager>();
             if (_instanceOnCurrentScene == null) {
-                GameObject go = new GameObject("AirVRCameraRigManager");
+                var go = new GameObject("AirVRCameraRigManager");
                 go.AddComponent<AirVRCameraRigManager>();
                 Assert.IsTrue(_instanceOnCurrentScene != null);
             }
@@ -61,18 +51,17 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private AirVRCameraRigList _cameraRigList;
-    private AirVRServerEventDispatcher _eventDispatcher;
 
     private AirVRCameraRig notifyCameraRigWillBeBound(int playerID) {
-        AirVRClientConfig config = AirVRServerPlugin.GetConfig(playerID);
+        var config = AirVRClientConfig.Get(playerID);
 
-        List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
+        var cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAvailableCameraRigs(config.type, cameraRigs);
 
         AirVRCameraRig selected = null;
         if (Delegate != null) {
             Delegate.AirVRCameraRigWillBeBound(playerID, config, cameraRigs, out selected);
-            AirVRServerPlugin.SetConfig(playerID, config);
+            AirVRClientConfig.Set(playerID, config);
         }
         else if (cameraRigs.Count > 0) {
             selected = cameraRigs[0];
@@ -81,7 +70,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void unregisterAllCameraRigs(bool applicationQuit) {
-        List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
+        var cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAllRetainedCameraRigs(cameraRigs);
 
         foreach (var cameraRig in cameraRigs) {
@@ -92,7 +81,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     private void updateApplicationTargetFrameRate() {
         if (AirVRServer.settings.AdaptiveFrameRate == false) { return; }
 
-        List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
+        var cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAllRetainedCameraRigs(cameraRigs);
 
         float maxCameraRigVideoFrameRate = 0.0f;
@@ -112,14 +101,14 @@ public class AirVRCameraRigManager : MonoBehaviour {
         _instanceOnCurrentScene = this;
 
         _cameraRigList = new AirVRCameraRigList();
-        _eventDispatcher = new AirVRServerEventDispatcher();
+        eventDispatcher = new AirVRServerEventDispatcher();
     }
 
     void Start() {
-        List<AirVRServerStreamHandover.Streams> streams = new List<AirVRServerStreamHandover.Streams>();
+        var streams = new List<AirVRServerStreamHandover.Streams>();
         AirVRServerStreamHandover.TakeAllStreamsHandedOverInPrevScene(streams);
         foreach (var item in streams) {
-            AirVRCameraRig selected = notifyCameraRigWillBeBound(item.playerID);
+            var selected = notifyCameraRigWillBeBound(item.playerID);
             if (selected != null) {
                 _cameraRigList.RetainCameraRig(selected);
                 selected.BindPlayer(item.playerID, item.mediaStream, item.inputStream);
@@ -129,20 +118,20 @@ public class AirVRCameraRigManager : MonoBehaviour {
                 }
             }
             else {
-                ocs_Disconnect(item.playerID);
+                OCSServerPlugin.Disconnect(item.playerID);
             }
         }
 
         updateApplicationTargetFrameRate();
 
-        _eventDispatcher.MessageReceived += onAirVRMessageReceived;
+        eventDispatcher.MessageReceived += onAirVRMessageReceived;
     }
 
     void Update() {
-        ocs_Update();
+        OCSServerPlugin.Update();
+        eventDispatcher.DispatchEvent();
 
-        _eventDispatcher.DispatchEvent();
-        List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
+        var cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAllCameraRigs(cameraRigs);
         foreach (var cameraRig in cameraRigs) {
             cameraRig.OnUpdate();
@@ -150,7 +139,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     void LateUpdate() {
-        List<AirVRCameraRig> cameraRigs = new List<AirVRCameraRig>();
+        var cameraRigs = new List<AirVRCameraRig>();
         _cameraRigList.GetAllCameraRigs(cameraRigs);
         foreach (var cameraRig in cameraRigs) {
             cameraRig.OnLateUpdate();
@@ -164,15 +153,11 @@ public class AirVRCameraRigManager : MonoBehaviour {
     void OnDestroy() {
         unregisterAllCameraRigs(false);
 
-        _eventDispatcher.MessageReceived -= onAirVRMessageReceived;
+        eventDispatcher.MessageReceived -= onAirVRMessageReceived;
         UnloadOncePerScene();
     }
 
-    internal AirVRServerEventDispatcher eventDispatcher {
-        get {
-            return _eventDispatcher;
-        }
-    }
+    internal AirVRServerEventDispatcher eventDispatcher { get; private set; }
 
     internal void RegisterCameraRig(AirVRCameraRig cameraRig) {
         _cameraRigList.AddUnboundCameraRig(cameraRig);
@@ -199,7 +184,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
 
     // handle AirVRMessages
     private void onAirVRMessageReceived(OCSMessage message) {
-        AirVRServerMessage serverMessage = message as AirVRServerMessage;
+        var serverMessage = message as AirVRServerMessage;
         int playerID = serverMessage.source.ToInt32();
 
         if (serverMessage.IsSessionEvent()) {
@@ -243,20 +228,20 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void onAirVRPlayerCreated(int playerID, AirVRServerMessage message) {
-        AirVRCameraRig selected = notifyCameraRigWillBeBound(playerID);
+        var selected = notifyCameraRigWillBeBound(playerID);
         if (selected != null) {
             _cameraRigList.RetainCameraRig(selected);
             selected.BindPlayer(playerID);
 
-            ocs_AcceptPlayer(playerID);
+            OCSServerPlugin.AcceptPlayer(playerID);
         }
         else {
-            ocs_Disconnect(playerID);
+            OCSServerPlugin.Disconnect(playerID);
         }
     }
 
     private void onAirVRPlayerActivated(int playerID, AirVRServerMessage message) {
-        AirVRCameraRig cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
+        var cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
         if (cameraRig != null && Delegate != null) {
             Delegate.AirVRCameraRigActivated(cameraRig);
         }
@@ -265,7 +250,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void onAirVRPlayerDeactivated(int playerID, AirVRServerMessage message) {
-        AirVRCameraRig cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
+        var cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
         if (cameraRig != null && Delegate != null) {
             Delegate.AirVRCameraRigDeactivated(cameraRig);
         }
@@ -274,7 +259,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void onAirVRPlayerDestroyed(int playerID, AirVRServerMessage message) {
-        AirVRCameraRig unboundCameraRig = _cameraRigList.GetBoundCameraRig(playerID);
+        var unboundCameraRig = _cameraRigList.GetBoundCameraRig(playerID);
         if (unboundCameraRig != null) {
             if (unboundCameraRig.isStreaming && Delegate != null) {
                 Delegate.AirVRCameraRigDeactivated(unboundCameraRig);
@@ -294,7 +279,7 @@ public class AirVRCameraRigManager : MonoBehaviour {
     }
 
     private void onAirVRPlayerUserDataReceived(int playerID, AirVRServerMessage message) {
-        AirVRCameraRig cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
+        var cameraRig = _cameraRigList.GetBoundCameraRig(playerID);
         if (cameraRig != null && Delegate != null) {
             Delegate.AirVRCameraRigUserDataReceived(cameraRig, message.Data_Decoded);
         }

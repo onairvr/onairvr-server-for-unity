@@ -1,10 +1,14 @@
-﻿using System.Runtime.InteropServices;
-using UnityEngine;
+﻿/***********************************************************
 
-public static class OCSPlugin {
-    public const string Name = "ocs";
-    public const string AudioPluginName = "AudioPlugin_ocs";
-}
+  Copyright (c) 2017-present Clicked, Inc.
+
+  Licensed under the MIT license found in the LICENSE file 
+  in the Docs folder of the distributed package.
+
+ ***********************************************************/
+
+using System.Runtime.InteropServices;
+using UnityEngine;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct OCSVector2D {

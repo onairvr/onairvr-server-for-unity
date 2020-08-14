@@ -8,15 +8,11 @@
  ***********************************************************/
 
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 public class AirVRServerMediaStream {
     private const int FramebufferCount = 3;
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_RegisterFramebufferTextures(int playerID, IntPtr[] textures, int textureCountPerFrame, int framebufferCount);
 
     public AirVRServerMediaStream(int playerID, AirVRClientConfig config, int cameraCount) {
         currentFramebufferIndex = 0;
@@ -40,7 +36,7 @@ public class AirVRServerMediaStream {
             }
         }
 
-        ocs_RegisterFramebufferTextures(playerID, framebuffers, cameraCount, FramebufferCount);
+        OCSServerPlugin.RegisterFramebufferTextures(playerID, framebuffers, cameraCount, FramebufferCount);
     }
 
     private RenderTexture[] _framebuffers;

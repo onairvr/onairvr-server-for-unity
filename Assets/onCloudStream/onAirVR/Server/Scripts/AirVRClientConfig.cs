@@ -1,4 +1,4 @@
-﻿/***********************************************************
+﻿/*****************;******************************************
 
   Copyright (c) 2017-present Clicked, Inc.
 
@@ -72,6 +72,18 @@ public class AirVRClientConfig {
         return result;
     }
 
+    public static AirVRClientConfig Get(int playerID) {
+        string json = "";
+        if (OCSServerPlugin.GetConfig(playerID, ref json)) {
+            return JsonUtility.FromJson<AirVRClientConfig>(json);
+        }
+        return null;
+    }
+
+    public static void Set(int playerID, AirVRClientConfig config) {
+        OCSServerPlugin.SetConfig(playerID, JsonUtility.ToJson(config));
+    }
+
     public AirVRClientConfig() {
         CameraProjection = new float[4];
     }
@@ -103,29 +115,10 @@ public class AirVRClientConfig {
         return result;
     }
 
-    public AirVRClientType type {
-        get {
-            return Stereoscopy ? AirVRClientType.Stereoscopic : AirVRClientType.Monoscopic;
-        }
-    }
-
-    public int videoWidth {
-        get {
-            return VideoWidth;
-        }
-    }
-
-    public int videoHeight {
-        get {
-            return VideoHeight;
-        }
-    }
-
-    public float framerate {
-        get {
-            return FrameRate;
-        }
-    }
+    public AirVRClientType type => Stereoscopy ? AirVRClientType.Stereoscopic : AirVRClientType.Monoscopic;
+    public int videoWidth => VideoWidth;
+    public int videoHeight => VideoHeight;
+    public float framerate => FrameRate;
 
     public float fov {
         get {
@@ -135,29 +128,10 @@ public class AirVRClientConfig {
         }
     }
 
-    public Vector3 eyeCenterPosition {
-        get {
-            return EyeCenterPosition;
-        }
-    }
-
-    public float ipd {
-        get {
-            return InterpupillaryDistance;
-        }
-    }
-
-    public string userID {
-        get {
-            return UserID;
-        }
-    }
-
-    public PhysicalCameraProps physicalCameraProps {
-        get {
-            return CalcPhysicalCameraProps(CameraProjection);
-        }
-    }
+    public Vector3 eyeCenterPosition => EyeCenterPosition;
+    public float ipd => InterpupillaryDistance;
+    public string userID => UserID;
+    public PhysicalCameraProps physicalCameraProps => CalcPhysicalCameraProps(CameraProjection);
 
     private bool isCameraProjectionValid(float[] projection) {
         return projection[2] - projection[0] > 0 && projection[1] - projection[3] > 0;

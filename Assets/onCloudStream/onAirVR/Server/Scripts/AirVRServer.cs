@@ -11,7 +11,6 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 
 [Serializable]
 public class AirVRServerSettingsReader {
@@ -36,39 +35,6 @@ public class AirVRServer : MonoBehaviour {
 
     private const int ProfilerFrame = 0x01;
     private const int ProfilerReport = 0x02;
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_GetOCSServerPluginPtr(ref System.IntPtr result);
-
-    [DllImport(OCSPlugin.AudioPluginName)]
-    private static extern void ocs_SetOCSServerPluginPtr(System.IntPtr ptr);
-
-    [DllImport(OCSPlugin.Name, CharSet = CharSet.Ansi)]
-    private static extern int ocs_SetLicenseFile(string filePath);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern int ocs_Startup(int maxConnectionCount, int portSTAP, int portAMP, bool loopbackOnlyForSTAP, int audioSampleRate);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern System.IntPtr ocs_Startup_RenderThread_Func();
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_Shutdown();
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern IntPtr ocs_Shutdown_RenderThread_Func();
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_EnableProfiler(int profilers);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_SetVideoEncoderParameters(float maxFrameRate, int gopCount);
-
-    [DllImport(OCSPlugin.AudioPluginName)]
-    private static extern void ocs_EncodeAudioFrame(int playerID, float[] data, int sampleCount, int channels, double timestamp);
-
-    [DllImport(OCSPlugin.AudioPluginName)]
-    private static extern void ocs_EncodeAudioFrameForAllPlayers(float[] data, int sampleCount, int channels, double timestamp);
 
     public interface EventHandler {
         void AirVRServerFailed(string reason);
@@ -123,12 +89,12 @@ public class AirVRServer : MonoBehaviour {
 
     public static void SendAudioFrame(AirVRCameraRig cameraRig, float[] data, int sampleCount, int channels, double timestamp) {
         if (cameraRig.isBoundToClient) {
-            ocs_EncodeAudioFrame(cameraRig.playerID, data, data.Length / channels, channels, AudioSettings.dspTime);
+            OCSServerPlugin.EncodeAudioFrame(cameraRig.playerID, data, data.Length / channels, channels, AudioSettings.dspTime);
         }
     }
 
     public static void SendAudioFrameToAllCameraRigs(float[] data, int sampleCount, int channels, double timestamp) {
-        ocs_EncodeAudioFrameForAllPlayers(data, data.Length / channels, channels, AudioSettings.dspTime);
+        OCSServerPlugin.EncodeAudioFrameForAllPlayers(data, data.Length / channels, channels, AudioSettings.dspTime);
     }
 
     private bool _startedUp = false;
@@ -154,27 +120,27 @@ public class AirVRServer : MonoBehaviour {
                 QualitySettings.vSyncCount = 0;
             }
 
-            ocs_SetLicenseFile(Application.isEditor ? "Assets/onCloudStream/onAirVR/Server/Editor/Misc/onairvr.license" : _settings.License);
-            ocs_SetVideoEncoderParameters(120.0f, GroupOfPictures);
+            OCSServerPlugin.SetLicenseFile(Application.isEditor ? "Assets/onCloudStream/onAirVR/Server/Editor/Misc/onairvr.license" : _settings.License);
+            OCSServerPlugin.SetVideoEncoderParameters(120.0f, GroupOfPictures);
 
-            int startupResult = ocs_Startup(_settings.MaxClientCount, _settings.StapPort, _settings.AmpPort, _settings.LoopbackOnly, AudioSettings.outputSampleRate);
+            int startupResult = OCSServerPlugin.Startup(_settings.MaxClientCount, _settings.StapPort, _settings.AmpPort, _settings.LoopbackOnly, AudioSettings.outputSampleRate);
             if (startupResult == 0) {   // no error
-                System.IntPtr pluginPtr = System.IntPtr.Zero;
-                ocs_GetOCSServerPluginPtr(ref pluginPtr);
-                ocs_SetOCSServerPluginPtr(pluginPtr);
+                var pluginPtr = IntPtr.Zero;
+                OCSServerPlugin.GetOCSServerPluginPtr(ref pluginPtr);
+                OCSServerPlugin.SetOCSServerPluginPtr(pluginPtr);
 
-                GL.IssuePluginEvent(ocs_Startup_RenderThread_Func(), 0);
+                GL.IssuePluginEvent(OCSServerPlugin.Startup_RenderThread_Func, 0);
                 _startedUp = true;
 
                 switch (_settings.Profiler) {
                     case "full":
-                        ocs_EnableProfiler(ProfilerFrame | ProfilerReport);
+                        OCSServerPlugin.EnableProfiler(ProfilerFrame | ProfilerReport);
                         break;
                     case "frame":
-                        ocs_EnableProfiler(ProfilerFrame);
+                        OCSServerPlugin.EnableProfiler(ProfilerFrame);
                         break;
                     case "report":
-                        ocs_EnableProfiler(ProfilerReport);
+                        OCSServerPlugin.EnableProfiler(ProfilerReport);
                         break;
                     default:
                         break;
@@ -239,10 +205,10 @@ public class AirVRServer : MonoBehaviour {
 
     private void OnDestroy() {
         if (_startedUp) {
-            GL.IssuePluginEvent(ocs_Shutdown_RenderThread_Func(), 0);
+            GL.IssuePluginEvent(OCSServerPlugin.Shutdown_RenderThread_Func, 0);
             GL.Flush();
 
-            ocs_Shutdown();
+            OCSServerPlugin.Shutdown();
         }
     }
 }

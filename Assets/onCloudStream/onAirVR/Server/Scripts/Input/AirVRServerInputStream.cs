@@ -7,93 +7,28 @@
 
  ***********************************************************/
 
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class AirVRServerInputStream : OCSInputStream {
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_BeginPendInput(int playerID, ref long timestamp);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_PendInputState(int playerID, byte device, byte control, byte state);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_PendInputRaycastHit(int playerID, byte device, byte control, OCSVector3D origin, OCSVector3D hitPosition, OCSVector3D hitNormal);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_PendInputVibration(int playerID, byte device, byte control, float frequency, float amplitude);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_SendPendingInputs(int playerID, long timestamp);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern long ocs_GetInputRecvTimestamp(int playerID);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputState(int playerID, byte device, byte control, ref byte state);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputByteAxis(int playerID, byte device, byte control, ref byte axis);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputAxis(int playerID, byte device, byte control, ref float axis);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputAxis2D(int playerID, byte device, byte control, ref OCSVector2D axis2D);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputPose(int playerID, byte device, byte control, ref OCSVector3D position, ref OCSVector4D rotation);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputTouch2D(int playerID, byte device, byte control, ref OCSVector2D position, ref byte state);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_IsInputActive(int playerID, byte device, byte control);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_IsInputDirectionActive(int playerID, byte device, byte control, byte direction);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputActivated(int playerID, byte device, byte control);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputDirectionActivated(int playerID, byte device, byte control, byte direction);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputDeactivated(int playerID, byte device, byte control);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern bool ocs_GetInputDirectionDeactivated(int playerID, byte device, byte control, byte direction);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_UpdateInputFrame(int playerID);
-
-    [DllImport(OCSPlugin.Name)]
-    private static extern void ocs_ClearInput(int playerID);
-
     public AirVRServerInputStream(AirVRCameraRig owner) {
         this.owner = owner;
     }
 
     public AirVRCameraRig owner { get; set; }
 
-    public long inputRecvTimestamp {
-        get {
-            return ocs_GetInputRecvTimestamp(owner.playerID);
-        }
-    }
+    public long inputRecvTimestamp => OCSServerPlugin.GetInputRecvTimestamp(owner.playerID);
 
     // implements AirVRInputStream
     protected override float maxSendingRatePerSec { get { return 90.0f; } }
 
     protected override void BeginPendInputImpl(ref long timestamp) {
-        ocs_BeginPendInput(owner.playerID, ref timestamp);
+        OCSServerPlugin.BeginPendInput(owner.playerID, ref timestamp);
     }
 
     protected override void PendStateImpl(byte device, byte control, byte state) {
         if (owner.isBoundToClient == false) { return; }
 
-        ocs_PendInputState(owner.playerID, device, control, state);
+        OCSServerPlugin.PendInputState(owner.playerID, device, control, state);
     }
 
     protected override void PendByteAxisImpl(byte device, byte control, byte axis) { }
@@ -104,61 +39,49 @@ public class AirVRServerInputStream : OCSInputStream {
     protected override void PendRaycastHitImpl(byte device, byte control, Vector3 origin, Vector3 hitPosition, Vector3 hitNormal) {
         if (owner.isBoundToClient == false) { return; }
 
-        ocs_PendInputRaycastHit(owner.playerID, device, control, new OCSVector3D(origin), new OCSVector3D(hitPosition), new OCSVector3D(hitNormal));
+        OCSServerPlugin.PendInputRaycastHit(owner.playerID, device, control, origin, hitPosition, hitNormal);
     }
 
     protected override void PendVibrationImpl(byte device, byte control, float frequency, float amplitude) {
         if (owner.isBoundToClient == false) { return; }
 
-        ocs_PendInputVibration(owner.playerID, device, control, frequency, amplitude);
+        OCSServerPlugin.PendInputVibration(owner.playerID, device, control, frequency, amplitude);
     }
 
     protected override void PendTouch2DImpl(byte device, byte control, Vector2 position, byte state, bool active) {}
 
     protected override void SendPendingInputEventsImpl(long timestamp) {
-        ocs_SendPendingInputs(owner.playerID, timestamp);
+        OCSServerPlugin.SendPendingInputs(owner.playerID, timestamp);
     }
 
     protected override bool GetStateImpl(byte device, byte control, ref byte state) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputState(owner.playerID, device, control, ref state);
+        return OCSServerPlugin.GetInputState(owner.playerID, device, control, ref state);
     }
 
     protected override bool GetByteAxisImpl(byte device, byte control, ref byte axis) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputByteAxis(owner.playerID, device, control, ref axis);   
+        return OCSServerPlugin.GetInputByteAxis(owner.playerID, device, control, ref axis);   
     }
 
     protected override bool GetAxisImpl(byte device, byte control, ref float axis) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputAxis(owner.playerID, device, control, ref axis);
+        return OCSServerPlugin.GetInputAxis(owner.playerID, device, control, ref axis);
     }
 
     protected override bool GetAxis2DImpl(byte device, byte control, ref Vector2 axis2D) {
         if (owner.isBoundToClient == false) { return false; }
 
-        var axis = new OCSVector2D();
-
-        if (ocs_GetInputAxis2D(owner.playerID, device, control, ref axis) == false) { return false; }
-
-        axis2D = axis.toVector2();
-        return true;
+        return OCSServerPlugin.GetInputAxis2D(owner.playerID, device, control, ref axis2D);
     }
 
     protected override bool GetPoseImpl(byte device, byte control, ref Vector3 position, ref Quaternion rotation) {
         if (owner.isBoundToClient == false) { return false; }
 
-        var pos = new OCSVector3D();
-        var rot = new OCSVector4D();
-
-        if (ocs_GetInputPose(owner.playerID, device, control, ref pos, ref rot) == false) { return false; }
-
-        position = pos.toVector3();
-        rotation = rot.toQuaternion();
-        return true;
+        return OCSServerPlugin.GetInputPose(owner.playerID, device, control, ref position, ref rotation);
     }
 
     protected override bool GetRaycastHitImpl(byte device, byte control, ref Vector3 origin, ref Vector3 hitPosition, ref Vector3 hitNormal) { return false; }
@@ -167,59 +90,54 @@ public class AirVRServerInputStream : OCSInputStream {
     protected override bool GetTouch2DImpl(byte device, byte control, ref Vector2 position, ref byte state) {
         if (owner.isBoundToClient == false) { return false; }
 
-        var pos = new OCSVector2D();
-
-        if (ocs_GetInputTouch2D(owner.playerID, device, control, ref pos, ref state) == false) { return false; }
-
-        position = pos.toVector2();
-        return true;
+        return OCSServerPlugin.GetInputTouch2D(owner.playerID, device, control, ref position, ref state);
     }
 
     protected override bool IsActiveImpl(byte device, byte control) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_IsInputActive(owner.playerID, device, control);
+        return OCSServerPlugin.IsInputActive(owner.playerID, device, control);
     }
 
     protected override bool IsActiveImpl(byte device, byte control, OCSInputDirection direction) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_IsInputDirectionActive(owner.playerID, device, control, (byte)direction);
+        return OCSServerPlugin.IsInputDirectionActive(owner.playerID, device, control, (byte)direction);
     }
 
     protected override bool GetActivatedImpl(byte device, byte control) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputActivated(owner.playerID, device, control);
+        return OCSServerPlugin.GetInputActivated(owner.playerID, device, control);
     }
 
     protected override bool GetActivatedImpl(byte device, byte control, OCSInputDirection direction) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputDirectionActivated(owner.playerID, device, control, (byte)direction);
+        return OCSServerPlugin.GetInputDirectionActivated(owner.playerID, device, control, (byte)direction);
     }
 
     protected override bool GetDeactivatedImpl(byte device, byte control) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputDeactivated(owner.playerID, device, control);
+        return OCSServerPlugin.GetInputDeactivated(owner.playerID, device, control);
     }
 
     protected override bool GetDeactivatedImpl(byte device, byte control, OCSInputDirection direction) {
         if (owner.isBoundToClient == false) { return false; }
 
-        return ocs_GetInputDirectionDeactivated(owner.playerID, device, control, (byte)direction);
+        return OCSServerPlugin.GetInputDirectionDeactivated(owner.playerID, device, control, (byte)direction);
     }
 
     protected override void UpdateInputFrameImpl() {
         if (owner.isBoundToClient == false) { return; }
 
-        ocs_UpdateInputFrame(owner.playerID);
+        OCSServerPlugin.UpdateInputFrame(owner.playerID);
     }
 
     protected override void ClearInputImpl() {
         if (owner.isBoundToClient == false) { return; }
 
-        ocs_ClearInput(owner.playerID);
+        OCSServerPlugin.ClearInput(owner.playerID);
     }
 }

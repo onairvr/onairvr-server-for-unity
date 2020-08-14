@@ -32,7 +32,7 @@ public abstract class OCSEventDispatcher {
             int length = 0;
 
             while (CheckMessageQueueImpl(out source, out data, out length)) {
-                byte[] array = new byte[length];
+                var array = new byte[length];
                 Marshal.Copy(data, array, 0, length);
                 RemoveFirstMessageFromQueueImpl();
 

@@ -50,7 +50,7 @@ public class AirVRCameraFade : MonoBehaviour {
     internal Color fadeOutColor = Color.black;
 
     private void Awake() {
-        _fadeMaterial = new Material(Shader.Find("onAirVR/Unlit transparent color"));
+        _fadeMaterial = new Material(Shader.Find("onCloudStream/Unlit transparent color"));
         _fadeMaterial.color = Color.clear;
 
         _cameraFades.Add(this);

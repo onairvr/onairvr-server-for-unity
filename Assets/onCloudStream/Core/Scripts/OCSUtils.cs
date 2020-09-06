@@ -4,6 +4,23 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 public static class OCSUtils {
+    public static Dictionary<string, string> ParseCommandLine(string[] args) {
+        if (args == null) { return null; }
+
+        var result = new Dictionary<string, string>();
+        foreach (var arg in args) {
+            var split = arg.IndexOf("=");
+            if (split <= 0) { continue; }
+
+            var name = arg.Substring(0, split);
+            var value = arg.Substring(split + 1);
+            if (string.IsNullOrEmpty(name)) { continue; }
+
+            result.Add(name, string.IsNullOrEmpty(value) == false ? value : null);
+        }
+        return result;
+    }
+
     public static Transform GetChildTransform(Transform xform, string name, bool create = false) {
         var result = xform.Find(name);
         if (result == null && create) {

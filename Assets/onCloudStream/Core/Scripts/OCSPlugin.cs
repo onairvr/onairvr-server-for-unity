@@ -825,7 +825,9 @@ public class OCSClientPlugin {
     }
 
     public static bool GetInputVibration(byte device, byte control, ref float frequency, ref float amplitude) {
-        return Application.isEditor && ocs_GetInputVibration(device, control, ref frequency, ref amplitude);
+        if (Application.isEditor) { return false; }
+
+        return ocs_GetInputVibration(device, control, ref frequency, ref amplitude);
     }
 
     public static void UpdateInputFrame() {

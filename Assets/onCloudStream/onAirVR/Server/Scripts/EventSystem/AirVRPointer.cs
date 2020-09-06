@@ -49,7 +49,7 @@ public class AirVRPointer : MonoBehaviour {
             if (_cameraRig == null) { return false; }
             if (_cameraRig.renderControllersOnClient == false) { return true; }
 
-            return _cameraRig.inputStream.GetByteAxis(_feedback.id, (byte)OCSHandTrackerControl.Status) != 0;
+            return _cameraRig.inputStream.GetState(_feedback.id, (byte)OCSHandTrackerControl.Status) != 0;
         }
     }
 

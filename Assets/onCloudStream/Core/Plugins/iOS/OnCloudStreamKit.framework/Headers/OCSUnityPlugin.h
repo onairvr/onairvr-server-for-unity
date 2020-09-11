@@ -1,14 +1,9 @@
 //  Copyright © 2020 Clicked Inc. All rights reserved.
 
 #import <Foundation/Foundation.h>
+#import "types.h"
 
 struct IUnityInterfaces;
-
-typedef struct OCSUnityPluginMessage {
-    void *source;
-    const void *data;
-    int length;
-} OCSPluginMessage;
 
 @interface OCSUnityPlugin : NSObject
 
@@ -24,12 +19,16 @@ typedef struct OCSUnityPluginMessage {
 - (void)renderWithEventID:(int)eventID;
 - (BOOL)peekMessage:(struct OCSUnityPluginMessage *)message;
 - (void)popMessage;
-- (uint8_t)registerInputSender:(NSString *)name;
-- (void)unregisterInputSender:(uint8_t)senderID;
 - (void)beginPendInput:(int64_t *)timestamp;
-- (void)pendInput:(uint8_t)deviceID control:(uint8_t)controlID values:(const float *)values length:(int)length policy:(uint8_t)policy;
+- (void)pendInput:(uint8_t)device control:(uint8_t)control state:(uint8_t)state;
+- (void)pendInput:(uint8_t)device control:(uint8_t)control byteAxis:(uint8_t)axis;
+- (void)pendInput:(uint8_t)device control:(uint8_t)control axis:(float)axis;
+- (void)pendInput:(uint8_t)device control:(uint8_t)control axis2D:(OCS_VECTOR2D)axis2D;
+- (void)pendInput:(uint8_t)device control:(uint8_t)control position:(OCS_VECTOR3D)position rotation:(OCS_VECTOR4D)rotation;
+- (void)pendInput:(uint8_t)device control:(uint8_t)control position:(OCS_VECTOR2D)position state:(uint8_t)state active:(bool)active;
 - (void)sendPendingInputs:(int64_t)timestamp;
-- (void)resetInput;
+- (void)clearInput;
+- (void)updateInputFrame;
 - (void)setCameraProjectionWithLeft:(float)left top:(float)top right:(float)right bottom:(float)bottom;
 - (void)setRenderAspect:(float)aspect;
 

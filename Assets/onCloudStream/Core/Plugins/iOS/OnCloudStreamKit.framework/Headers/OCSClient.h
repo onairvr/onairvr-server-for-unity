@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)releaseVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 - (void *)session;
 - (void)notify:(void *)notification;
-- (void)sendInput:(void *)buffer timestamp:(int64_t)timestamp;
+- (void)sendInput:(void *)buffer timestamp:(int64_t)timestamp reliable:(BOOL)reliable;
 
 NS_ASSUME_NONNULL_END
 

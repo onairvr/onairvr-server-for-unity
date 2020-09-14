@@ -15,48 +15,83 @@ using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
 public class OCSCameraFade : MonoBehaviour {
-    private static List<OCSCameraFade> _cameraFades = new List<OCSCameraFade>();
+    private static Dictionary<string, List<OCSCameraFade>> _cameraFades = new Dictionary<string, List<OCSCameraFade>>();
 
-    public static async Task FadeAllCameras(bool fadeIn, float duration) {
-        await Task.WhenAll(_cameraFades.Select(fade => fade.fadeTask(fadeIn, duration)));
-
-        for (bool anyCameraIsFading = true; anyCameraIsFading;) {
-            anyCameraIsFading = false;
-            foreach (var cameraFade in _cameraFades) {
-                anyCameraIsFading = anyCameraIsFading || cameraFade.isFading;
-                if (anyCameraIsFading) {
-                    break;
-                }
-            }
-            if (anyCameraIsFading) {
-                await Task.Yield();
-            }
+    private static void addCameraFade(OCSCameraFade fade) {
+        if (_cameraFades.ContainsKey(fade._tag) == false) {
+            _cameraFades.Add(fade._tag, new List<OCSCameraFade>());
         }
+        _cameraFades[fade._tag].Add(fade);
     }
 
-    public static void FadeAllCamerasImmediately(bool fadeIn) {
-        foreach (var cameraFade in _cameraFades) {
-            cameraFade.FadeImmediately(fadeIn);
+    private static void removeCameraFade(OCSCameraFade fade) {
+        if (_cameraFades.ContainsKey(fade._tag) == false) { return; }
+
+        _cameraFades[fade._tag].Remove(fade);
+
+        if (_cameraFades[fade._tag].Count == 0) {
+            _cameraFades.Remove(fade._tag);
+                }
+            }
+
+    public static async Task FadeAllCameras(string tag, int layer, Color from, Color to, float duration) {
+        if (_cameraFades.ContainsKey(tag) == false) { return; }
+
+        await Task.WhenAll(_cameraFades[tag].Select(fade => fade.fadeTask(layer, from, to, duration)));
+            }
+
+    public static void FadeAllCamerasImmediately(string tag, int layer, Color color) {
+        if (_cameraFades.ContainsKey(tag) == false) { return; }
+
+        foreach (var cameraFade in _cameraFades[tag]) {
+            cameraFade.FadeImmediately(layer, color);
         }
     }
 
     private Material _fadeMaterial;
-    private Color _startFadeColor;
-    private Color _endFadeColor;
-    private float _startTimeToFade;
+    private Dictionary<int, Fader> _faders = new Dictionary<int, Fader>();
 
-    [SerializeField]
-    internal Color fadeOutColor = Color.black;
+    [SerializeField] string _tag = "default";
+
+    public bool isFading {
+        get {
+            foreach (var fader in _faders.Values) {
+                if (fader.fading) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        }
+
+    public async void Fade(int layer, Color from, Color to, float duration) {
+        await fadeTask(layer, from, to, duration);
+    }
+
+    public void FadeImmediately(int layer, Color color) {
+        var shouldUpdateImmediately = isFading == false;
+
+        _faders[layer] = new Fader(color);
+
+        if (shouldUpdateImmediately) {
+            _fadeMaterial.color = updateFadeColors(Time.realtimeSinceStartup);
+        }
+    }
 
     private void Awake() {
         _fadeMaterial = new Material(Shader.Find("onCloudStream/Unlit transparent color"));
         _fadeMaterial.color = Color.clear;
 
-        _cameraFades.Add(this);
+        addCameraFade(this);
     }
 
     private void OnDestroy() {
-        _cameraFades.Remove(this);
+        foreach (var fader in _faders.Values) {
+            fader.Cancel();
+        }
+        _faders.Clear();
+
+        removeCameraFade(this);
     }
 
     private void OnPostRender() {
@@ -75,33 +110,86 @@ public class OCSCameraFade : MonoBehaviour {
         }
     }
 
-    public bool isFading { get; private set; }
+    private async Task fadeTask(int layer, Color from, Color to, float duration) {
+        if (isFading) {
+            _faders[layer] = new Fader(from, to, duration);
+            return;
+        }
 
-    public async void Fade(bool fadeIn, float duration) {
-        await fadeTask(fadeIn, duration);
+        _faders[layer] = new Fader(from, to, duration);
+
+        do {
+            _fadeMaterial.color = updateFadeColors(Time.realtimeSinceStartup);
+
+            await Task.Yield();
+        } while (isFading);
     }
 
-    public void FadeImmediately(bool fadeIn) {
-        _startFadeColor = fadeIn ? fadeOutColor : Color.clear;
-        _endFadeColor = fadeIn ? Color.clear : fadeOutColor;
+    private Color updateFadeColors(float time) {
+        var color = Color.clear;
 
-        _fadeMaterial.color = _endFadeColor;
+        var layers = new List<int>(_faders.Keys);
+        layers.Sort();
+
+        foreach (var key in layers) {
+            _faders[key].Update(time);
+
+            var over = _faders[key].color;
+            var col = over + color * (1 - over.a);
+            var alpha = over.a + color.a * (1 - over.a);
+
+            color = col;
+            color.a = alpha;
+        }
+        return color;
     }
 
-    private async Task fadeTask(bool fadeIn, float duration) {
-        _startFadeColor = isFading ? _fadeMaterial.color : (fadeIn ? fadeOutColor : Color.clear);
-        _endFadeColor = fadeIn ? Color.clear : fadeOutColor;
+    private class Fader {
+        private State _state = State.Ready;
+        private Color _colorFrom;
+        private Color _colorTo;
+        private float _startTime;
+        private float _duration;
 
-        _startTimeToFade = Time.realtimeSinceStartup;
+        public Color color { get; private set; }
+        public bool fading => _state != State.Done;
 
-        if (isFading == false) {
-            isFading = true;
-            _fadeMaterial.color = _startFadeColor;
-            while (_fadeMaterial.color != _endFadeColor) {
-                _fadeMaterial.color = Color.Lerp(_startFadeColor, _endFadeColor, (Time.realtimeSinceStartup - _startTimeToFade) / duration);
-                await Task.Yield();
+        public Fader(Color from, Color to, float duration) {
+            _colorFrom = from;
+            _colorTo = to;
+            _duration = duration;
+        }
+
+        public Fader(Color color) {
+            _colorFrom = _colorTo = color;
+            _duration = 0;
+    }
+
+        public void Update(float realtime) {
+            switch (_state) {
+                case State.Ready:
+                    color = _colorFrom;
+                    _startTime = realtime;
+                    _state = _duration > 0 ? State.Fading : State.Done;
+                    break;
+                case State.Fading:
+                    color = Color.Lerp(_colorFrom, _colorTo, (realtime - _startTime) / _duration);
+
+                    if (color == _colorTo) {
+                        _state = State.Done;
+                    }
+                    break;
             }
-            isFading = false;
+        }
+
+        public void Cancel() {
+            _state = State.Done;
+            }
+
+        private enum State {
+            Ready,
+            Fading,
+            Done
         }
     }
 }
